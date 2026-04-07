@@ -21,3 +21,31 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+
+# Thumbnails
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on VFAT partitions
+$RECYCLE.BIN/
+
+# MacOS-specific
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
