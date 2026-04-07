@@ -26,10 +26,10 @@
     <!-- Sidebar Backdrop (Mobile only) -->
     <div id="sidebarBackdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden transition-opacity duration-300"></div>
 
-    <header class="bg-glass border-b border-white/20 h-16 flex items-center justify-between px-6 z-50 sticky top-0 shadow-premium">
+    <header class="bg-glass-blue border-b border-blue-400/30 h-16 flex items-center justify-between px-6 z-50 sticky top-0 shadow-premium">
         <!-- Logo & Toggle -->
         <div class="flex items-center gap-4">
-            <button id="sidebarToggle" class="p-2.5 rounded-2xl text-blue-600 bg-blue-50/50 md:hidden hover:bg-blue-600 hover:text-white transition-all border border-blue-100/50 shadow-sm shadow-blue-500/10">
+            <button id="sidebarToggle" class="p-2.5 rounded-2xl text-white bg-white/10 md:hidden hover:bg-white hover:text-blue-600 transition-all border border-white/20 shadow-sm shadow-blue-500/10">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
@@ -38,9 +38,9 @@
                 <div class="p-1.5 bg-white rounded-xl shadow-sm border border-slate-100 group-hover:scale-110 transition-transform">
                     <img src="https://cdn-icons-png.flaticon.com/512/7471/7471547.png" alt="Logo" class="w-7 h-7">
                 </div>
-                <div class="hidden lg:block border-l border-slate-200 pl-4">
-                    <h1 class="font-black text-xl tracking-tighter leading-none text-slate-800 uppercase">WEB<span class="text-blue-600">GIS</span></h1>
-                    <p class="text-[8px] uppercase font-black tracking-[0.2em] text-slate-400 leading-none mt-1">Tirta Perwira</p>
+                <div class="hidden lg:block border-l border-white/20 pl-4">
+                    <h1 class="font-black text-xl tracking-tighter leading-none text-white uppercase">WEB<span class="text-blue-200">GIS</span></h1>
+                    <p class="text-[8px] uppercase font-black tracking-[0.2em] text-blue-100 leading-none mt-1">Tirta Perwira</p>
                 </div>
             </div>
         </div>
@@ -67,7 +67,7 @@
         
         <!-- Profile -->
         <div class="flex items-center gap-4">
-            <button class="md:hidden p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
+            <button id="mobileSearchToggle" class="md:hidden p-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
@@ -76,10 +76,10 @@
 
         <!-- Profile Dropdown -->
         @auth
-        <div class="relative items-center gap-3 border-l border-slate-200 pl-5 ml-1 hidden sm:flex" id="profileContainer">
+        <div class="relative items-center gap-3 border-l border-white/20 pl-5 ml-1 hidden sm:flex" id="profileContainer">
             <div class="text-right">
-                <p class="text-[10px] font-black text-slate-800 uppercase leading-none tracking-tight">{{ Auth::user()->username }}</p>
-                <p class="text-[8px] text-blue-600 font-black uppercase tracking-[0.1em] mt-0.5">Admin Server</p>
+                <p class="text-[10px] font-black text-white uppercase leading-none tracking-tight">{{ Auth::user()->username }}</p>
+                <p class="text-[8px] text-blue-200 font-black uppercase tracking-[0.1em] mt-0.5">Admin Server</p>
             </div>
             <button id="profileToggle" class="relative group cursor-pointer focus:outline-none">
                 <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-xs font-black shadow-lg shadow-blue-500/30 group-hover:scale-105 transition-all">
@@ -120,6 +120,21 @@
         @endauth
     </header>
 
+    <!-- Mobile Search Bar (Expandable) -->
+    <div id="mobileSearchContainer" class="bg-blue-700/95 backdrop-blur-md md:hidden flex items-center px-4 z-40 transition-all duration-300">
+        <div class="relative w-full">
+            <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                <svg class="w-4 h-4 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+            <input type="text" id="mobileCustomerSearchInput" placeholder="Cari Pelanggan..." class="w-full bg-white/10 border border-white/20 text-white text-sm font-bold rounded-xl pl-11 pr-20 py-3 focus:bg-white focus:text-blue-900 outline-none transition-all placeholder:text-blue-200/60 shadow-inner">
+            <div class="absolute inset-y-0 right-0 flex items-center pr-1.5">
+                <button id="mobileSearchButton" class="bg-white text-blue-700 px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-50 active:scale-95 transition-all shadow-md shadow-blue-900/20">Cari</button>
+            </div>
+        </div>
+    </div>
+
     <div class="flex-1 flex overflow-hidden min-h-0 relative">
         @include('partials.sidebar')
         <main class="flex-1 flex flex-col relative bg-slate-200 shadow-inner overflow-hidden">
@@ -127,12 +142,12 @@
         </main>
     </div>
 
-    <footer class="bg-white border-t border-slate-200 p-2 text-center text-[10px] font-bold tracking-widest z-50">
-        <p class="text-slate-400">
+    <footer class="bg-blue-900 border-t border-blue-800 p-3 text-center text-[10px] font-bold tracking-widest z-50">
+        <p class="text-blue-300/60">
             <span class="hidden sm:inline">Copyright © 2021 </span>
-            <span class="text-blue-600">Tirta Perwira</span>
+            <span class="text-white">Tirta Perwira</span>
             <span class="hidden sm:inline"> Versi 4.0 | Departement IT dan Tim GIS</span>
-            <span class="sm:hidden font-black ml-1">V4.0</span>
+            <span class="sm:hidden font-black ml-1 text-white">V4.0</span>
         </p>
     </footer>
 

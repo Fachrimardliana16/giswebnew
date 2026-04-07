@@ -156,7 +156,14 @@ export function setupPipaFilters(map, layers) {
       conditions.push(`jenis='${jenisFilter.value}'`);
     }
     if (jaringanFilter && jaringanFilter.value) {
-      conditions.push(`jnsjringan='${jaringanFilter.value}'`);
+      const val = jaringanFilter.value;
+      if (val === 'Tansmisi') {
+        conditions.push(`(jnsjringan='Tansmisi' OR jnsjringan='Transmisi')`);
+      } else if (val === 'Tersier') {
+        conditions.push(`(jnsjringan LIKE 'Tersier' OR jnsjringan LIKE 'Tertier' OR jnsjringan LIKE 'tersier' OR jnsjringan LIKE 'tertier%')`);
+      } else {
+        conditions.push(`jnsjringan='${val}'`);
+      }
     }
     if (unitFilter && unitFilter.value) {
       conditions.push(`unitikk='${unitFilter.value}'`);

@@ -15,25 +15,25 @@ export const MAP_BOUNDS = [
 
 // Layer zoom level configurations
 export const LAYER_ZOOM_LEVELS = {
-  analisa_pelanggan: { minZoom: 12, maxZoom: 19 },
-  web_pipa: { minZoom: 12, maxZoom: 19 },
+  analisa_pelanggan: { minZoom: 12, maxZoom: 22 },
+  web_pipa: { minZoom: 12, maxZoom: 22 },
   // Accessories
-  all_airvalve: { minZoom: 12, maxZoom: 19 },
-  all_bend: { minZoom: 12, maxZoom: 19 },
-  all_checkvalve: { minZoom: 12, maxZoom: 19 },
-  all_dop: { minZoom: 12, maxZoom: 19 },
-  all_firehydrant: { minZoom: 12, maxZoom: 19 },
-  all_gatevalve: { minZoom: 12, maxZoom: 19 },
-  all_meterinduk: { minZoom: 12, maxZoom: 19 },
-  all_prv: { minZoom: 12, maxZoom: 19 },
-  all_reducer: { minZoom: 12, maxZoom: 19 },
-  all_strainer: { minZoom: 12, maxZoom: 19 },
-  all_tee: { minZoom: 12, maxZoom: 19 },
-  all_titik_tekanan: { minZoom: 12, maxZoom: 19 },
-  all_washout1: { minZoom: 12, maxZoom: 19 },
-  monitoring_pengaduan: { minZoom: 12, maxZoom: 19 },
+  all_airvalve: { minZoom: 12, maxZoom: 22 },
+  all_bend: { minZoom: 12, maxZoom: 22 },
+  all_checkvalve: { minZoom: 12, maxZoom: 22 },
+  all_dop: { minZoom: 12, maxZoom: 22 },
+  all_firehydrant: { minZoom: 12, maxZoom: 22 },
+  all_gatevalve: { minZoom: 12, maxZoom: 22 },
+  all_meterinduk: { minZoom: 12, maxZoom: 22 },
+  all_prv: { minZoom: 12, maxZoom: 22 },
+  all_reducer: { minZoom: 12, maxZoom: 22 },
+  all_strainer: { minZoom: 12, maxZoom: 22 },
+  all_tee: { minZoom: 12, maxZoom: 22 },
+  all_titik_tekanan: { minZoom: 12, maxZoom: 22 },
+  all_washout1: { minZoom: 12, maxZoom: 22 },
+  monitoring_pengaduan: { minZoom: 12, maxZoom: 22 },
   // Default values for other layers
-  default: { minZoom: 10, maxZoom: 19 }
+  default: { minZoom: 10, maxZoom: 22 }
 };
 
 /**

@@ -100,5 +100,35 @@ export function initProfileDropdown() {
     }
 }
 
+/**
+ * Mobile Search Toggle Logic
+ */
+export function initMobileSearch() {
+    const toggleBtn = document.getElementById('mobileSearchToggle');
+    const container = document.getElementById('mobileSearchContainer');
+    const input = document.getElementById('mobileCustomerSearchInput');
+
+    if (toggleBtn && container) {
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isActive = container.classList.contains('active');
+            
+            if (!isActive) {
+                container.classList.add('active');
+                if (input) setTimeout(() => input.focus(), 300);
+            } else {
+                container.classList.remove('active');
+            }
+        });
+
+        // Close on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && container.classList.contains('active')) {
+                container.classList.remove('active');
+            }
+        });
+    }
+}
+
 // Make globally accessible for inline onclick handlers (Blade components)
 window.toggleSection = toggleSection;

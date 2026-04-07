@@ -124,14 +124,20 @@ $accessories = config('gis.accessories', []);
 
                     <x-gis.sidebar.filter-select id="pipaJaringanFilter" label="Jenis Jaringan">
                         <option value="">Semua Jaringan</option>
-                        <option value="Transmisi">Transmisi</option>
-                        <option value="Distribusi">Distribusi</option>
+                        <option value="JDU">JDU (Distribusi Utama)</option>
+                        <option value="JDL">JDL (Distribusi Lingkungan)</option>
+                        <option value="Tansmisi">Transmisi (Tansmisi)</option>
+                        <option value="Tersier">Tersier/Lainnya</option>
                     </x-gis.sidebar.filter-select>
 
                     <x-gis.sidebar.filter-select id="pipaUnitFilter" label="Wilayah Unit/IKK">
                         <option value="">Semua Unit</option>
-                        @foreach(['Kota Bangga', 'Usman Janatin', 'Goentoer Djarjono', 'Ardilawet', 'Jenderal Soedirman'] as $unit)
-                            <option value="{{ $unit }}">{{ $unit }}</option>
+                        <option value="Cabang Kota">Cabang Kota</option>
+                        <option value="Cabang Kota Bangga">Cabang Kota Bangga</option>
+                        <option value="Cabang Goentoer Djarjono">Cabang Goentoer Djarjono</option>
+                        <hr class="my-1 border-white/10">
+                        @foreach(['Bobotsari', 'Bojongsari', 'Bukateja', 'Kaligondang', 'Kalimanah', 'Kemangkon', 'Kutasari', 'Mrebet', 'Padamara', 'Rembang'] as $unit)
+                            <option value="Unit IKK {{ $unit }}">Unit IKK {{ $unit }}</option>
                         @endforeach
                     </x-gis.sidebar.filter-select>
                 </div>

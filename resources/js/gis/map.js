@@ -7,12 +7,12 @@ import { MAP_CENTER, DEFAULT_ZOOM, MAP_BOUNDS, LAYER_ZOOM_LEVELS } from './confi
 export const initMap = () => {
   // Define base layers
   const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
+    maxZoom: 22,
     attribution: '© OpenStreetMap Contributors'
   });
 
   const googleSatellite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-    maxZoom: 20,
+    maxZoom: 22,
     attribution: '© Google Maps'
   });
 
@@ -21,7 +21,7 @@ export const initMap = () => {
     center: MAP_CENTER,
     zoom: DEFAULT_ZOOM,
     minZoom: 10,
-    maxZoom: 20,
+    maxZoom: 22,
     maxBounds: MAP_BOUNDS,
     maxBoundsViscosity: 0.7,
   });
@@ -56,6 +56,88 @@ export const initMap = () => {
       }
     });
   }
+
+  // Custom Geolocation Logic
+  const locationBtn = document.getElementById('getLocationBtn');
+  const locationIcon = document.getElementById('locationIcon');
+  
+  if (locationBtn) {
+    locationBtn.addEventListener('click', () => {
+      // Toggle: If location already exists, remove it
+      if (window.currentUserLocationMarker) {
+        map.removeLayer(window.currentUserLocationMarker);
+        window.currentUserLocationMarker = null;
+        
+        // Reset Button UI
+        if (locationIcon) {
+          locationIcon.classList.replace('bg-red-500', 'bg-emerald-50/50');
+          locationIcon.classList.replace('text-white', 'text-emerald-600');
+        }
+        return;
+      }
+
+      if (navigator.geolocation) {
+        // Show visual feedback (loading state)
+        if (locationIcon) locationIcon.classList.add('animate-pulse');
+        locationBtn.classList.add('opacity-70', 'pointer-events-none');
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            const latlng = [latitude, longitude];
+
+            // Center map and zoom in
+            map.setView(latlng, 20);
+
+            // Add marker for current location with smaller radius
+            window.currentUserLocationMarker = L.circle(latlng, {
+              radius: 6, // Reduced from 20 to 6 meters
+              color: '#059669', // emerald-600
+              fillColor: '#10b981', // emerald-500
+              fillOpacity: 0.8,
+              weight: 3
+            }).addTo(map).bindPopup(`
+              <div class="text-center p-1">
+                <p class="font-black text-[10px] uppercase mb-1" style="color: #64748b;">Lokasi Anda</p>
+                <button onclick="window.removeMyLocation()" class="bg-red-500 text-white px-3 py-1 rounded-lg text-[9px] font-black uppercase">Hapus Titik</button>
+              </div>
+            `, { className: 'custom-gis-popup' }).openPopup();
+
+            // Update Button UI to show active state
+            if (locationIcon) {
+              locationIcon.classList.remove('animate-pulse');
+              locationIcon.classList.replace('bg-emerald-50/50', 'bg-red-500');
+              locationIcon.classList.replace('text-emerald-600', 'text-white');
+            }
+            locationBtn.classList.remove('opacity-70', 'pointer-events-none');
+          },
+          (error) => {
+            console.error('Geolocation Error:', error);
+            let msg = 'Gagal mengambil lokasi.';
+            if (error.code === 1) msg = 'Izin lokasi ditolak.';
+            alert(msg);
+            if (locationIcon) locationIcon.classList.remove('animate-pulse');
+            locationBtn.classList.remove('opacity-70', 'pointer-events-none');
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      } else {
+        alert('Browser Anda tidak mendukung Geolocation.');
+      }
+    });
+  }
+
+  // Global helper to remove location layer from popup
+  window.removeMyLocation = () => {
+    if (window.currentUserLocationMarker) {
+      map.removeLayer(window.currentUserLocationMarker);
+      window.currentUserLocationMarker = null;
+      if (locationIcon) {
+        locationIcon.classList.replace('bg-red-500', 'bg-emerald-50/50');
+        locationIcon.classList.replace('text-white', 'text-emerald-600');
+      }
+    }
+  };
 
   return map;
 };

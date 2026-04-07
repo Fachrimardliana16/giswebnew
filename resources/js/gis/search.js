@@ -2,15 +2,15 @@ import { GEOSERVER_WFS_URL } from './config.js';
 import { renderFeaturePopup } from './popupUI.js';
 
 export function initSearch(map) {
-    const searchInput = document.getElementById('customerSearchInput');
-    const searchButton = document.getElementById('searchButton');
+    const desktopInput = document.getElementById('customerSearchInput');
+    const desktopButton = document.getElementById('searchButton');
+    const mobileInput = document.getElementById('mobileCustomerSearchInput');
+    const mobileButton = document.getElementById('mobileSearchButton');
     const clearButton = document.getElementById('clearSearch');
     let searchMarker = null;
 
-    if (!searchInput || !searchButton) return;
-
-    const performSearch = async () => {
-        const query = searchInput.value.trim();
+    const performSearch = async (inputElement) => {
+        const query = inputElement.value.trim();
         if (!query) return;
 
         console.log('Searching for:', query);
@@ -18,8 +18,7 @@ export function initSearch(map) {
         try {
             // Build CQL Filter for Search (Supports Name and Account Number)
             const cqlFilter = `nama ILIKE '%${query}%' OR nolang LIKE '${query}%'`;
-            console.log('WFS Search CQL:', cqlFilter);
-
+            
             const params = new URLSearchParams({
                 service: 'WFS',
                 version: '1.0.0',
@@ -30,25 +29,18 @@ export function initSearch(map) {
                 cql_filter: cqlFilter
             });
 
-            console.log('WFS URL:', `${GEOSERVER_WFS_URL}?${params.toString()}`);
             const response = await fetch(`${GEOSERVER_WFS_URL}?${params.toString()}`);
             const data = await response.json();
 
             if (data.features && data.features.length > 0) {
                 const feature = data.features[0];
                 const coords = feature.geometry.coordinates;
-                
-                // GeoServer returns [lng, lat] for WFS 1.0.0 in some CRS, but usually [lng, lat]
-                // We assume [lng, lat] and need [lat, lng] for Leaflet
                 const latLng = [coords[1], coords[0]];
 
-                // Clear previous search result
                 if (searchMarker) map.removeLayer(searchMarker);
 
-                // Zoom to first result
                 map.setView(latLng, 18);
 
-                // Add highlight marker
                 searchMarker = L.circleMarker(latLng, {
                     radius: 12,
                     fillColor: "#3b82f6",
@@ -58,7 +50,6 @@ export function initSearch(map) {
                     fillOpacity: 0.8
                 }).addTo(map);
 
-                // Add popup with info using centralized UI
                 const props = feature.properties;
                 const popupContent = renderFeaturePopup(props.nama || 'Informasi Pelanggan', props, latLng[0], latLng[1]);
                 
@@ -67,7 +58,10 @@ export function initSearch(map) {
                     className: 'custom-gis-popup'
                 }).openPopup();
 
-                console.log('Found:', props.nama);
+                // If mobile, close the search container after finding
+                const mobileContainer = document.getElementById('mobileSearchContainer');
+                if (mobileContainer) mobileContainer.classList.remove('active');
+
             } else {
                 alert('Data tidak ditemukan');
             }
@@ -77,15 +71,25 @@ export function initSearch(map) {
         }
     };
 
-    // Events
-    searchButton.addEventListener('click', performSearch);
-    searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') performSearch();
-    });
+    // Desktop Events
+    if (desktopButton && desktopInput) {
+        desktopButton.addEventListener('click', () => performSearch(desktopInput));
+        desktopInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch(desktopInput);
+        });
+    }
 
-    if (clearButton) {
-        searchInput.addEventListener('input', () => {
-            if (searchInput.value) {
+    // Mobile Events
+    if (mobileButton && mobileInput) {
+        mobileButton.addEventListener('click', () => performSearch(mobileInput));
+        mobileInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch(mobileInput);
+        });
+    }
+
+    if (clearButton && desktopInput) {
+        desktopInput.addEventListener('input', () => {
+            if (desktopInput.value) {
                 clearButton.classList.remove('hidden');
             } else {
                 clearButton.classList.add('hidden');
@@ -93,13 +97,13 @@ export function initSearch(map) {
         });
 
         clearButton.addEventListener('click', () => {
-            searchInput.value = '';
+            desktopInput.value = '';
             clearButton.classList.add('hidden');
             if (searchMarker) {
                 map.removeLayer(searchMarker);
                 searchMarker = null;
             }
-            searchInput.focus();
+            desktopInput.focus();
         });
     }
 }

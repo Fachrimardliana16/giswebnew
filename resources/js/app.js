@@ -3,7 +3,7 @@ import { initMap } from './gis/map.js';
 import { initLayers } from './gis/layers.js';
 import { initFilters } from './gis/filters.js';
 import { initControls } from './gis/controls.js';
-import { initMobileToggle, initProfileDropdown } from './gis/ui.js';
+import { initMobileToggle, initProfileDropdown, initMobileSearch } from './gis/ui.js';
 import { initSearch } from './gis/search.js';
 import { initFeatureInfo } from './gis/featureInfo.js';
 
@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize UI Toggles immediately for best responsiveness
     initMobileToggle();
     initProfileDropdown();
+    initMobileSearch();
     
     try {
         // Initialize map
