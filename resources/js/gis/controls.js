@@ -4,31 +4,28 @@
  * @param {Object} layers - Map layers object
  */
 export const initControls = (map, layers) => {
-  // 1. Handle individual layer checkboxes
+  // 1. Handle individual layer checkboxes (Generic)
   document.querySelectorAll('.layer-checkbox').forEach(checkbox => {
     checkbox.addEventListener('change', function () {
       const layerId = this.id;
-      const layer = layers[layerId];
+      
+      // Skip if this is a pipe-related checkbox (handled in filters.js)
+      if (this.classList.contains('pipa-checkbox') || this.classList.contains('pipa-sumberma-checkbox')) {
+        return;
+      }
 
+      const layer = layers[layerId];
       if (layer) {
         if (this.checked) {
           layer.addTo(map);
-          console.log(`Layer activated: ${layerId}`);
-          
           // Add visual feedback
           const label = this.parentElement.querySelector('label');
-          if (label) {
-            label.classList.add('text-blue-600', 'font-black');
-          }
+          if (label) label.classList.add('text-blue-600', 'font-black');
         } else {
           layer.remove();
-          console.log(`Layer deactivated: ${layerId}`);
-          
           // Remove visual feedback
           const label = this.parentElement.querySelector('label');
-          if (label) {
-            label.classList.remove('text-blue-600', 'font-black');
-          }
+          if (label) label.classList.remove('text-blue-600', 'font-black');
         }
       }
     });

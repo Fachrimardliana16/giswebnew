@@ -1,4 +1,5 @@
 import { MAP_CENTER, DEFAULT_ZOOM, MAP_BOUNDS, LAYER_ZOOM_LEVELS } from './config.js';
+import { showToast } from './toast.js';
 
 /**
  * Initialize the Leaflet map with base layers and controls
@@ -115,14 +116,14 @@ export const initMap = () => {
             console.error('Geolocation Error:', error);
             let msg = 'Gagal mengambil lokasi.';
             if (error.code === 1) msg = 'Izin lokasi ditolak.';
-            alert(msg);
+            showToast(msg, 'error');
             if (locationIcon) locationIcon.classList.remove('animate-pulse');
             locationBtn.classList.remove('opacity-70', 'pointer-events-none');
           },
           { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
       } else {
-        alert('Browser Anda tidak mendukung Geolocation.');
+        showToast('Browser Anda tidak mendukung Geolocation.', 'warning');
       }
     });
   }
@@ -148,19 +149,6 @@ export const initMap = () => {
  * @param {Object} layers - Map layers object
  */
 export const setupMapZoomHandler = (map, layers) => {
-  const zoomWarningDiv = L.DomUtil.create('div', 'zoom-warning');
-  zoomWarningDiv.style.display = 'none';
-  zoomWarningDiv.style.position = 'absolute';
-  zoomWarningDiv.style.top = '50%';
-  zoomWarningDiv.style.left = '50%';
-  zoomWarningDiv.style.transform = 'translate(-50%, -50%)';
-  zoomWarningDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-  zoomWarningDiv.style.padding = '10px';
-  zoomWarningDiv.style.borderRadius = '5px';
-  zoomWarningDiv.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
-  zoomWarningDiv.style.zIndex = '1000';
-  map.getContainer().appendChild(zoomWarningDiv);
-
   map.on('zoomend', function () {
     const currentZoom = map.getZoom();
     let warningMessage = '';
@@ -184,15 +172,9 @@ export const setupMapZoomHandler = (map, layers) => {
       }
     });
 
-    // Show/hide warning message
+    // Show warning message as toast
     if (warningMessage) {
-      zoomWarningDiv.textContent = warningMessage;
-      zoomWarningDiv.style.display = 'block';
-      setTimeout(() => {
-        zoomWarningDiv.style.display = 'none';
-      }, 3000);
-    } else {
-      zoomWarningDiv.style.display = 'none';
+      showToast(warningMessage, 'warning', 2000);
     }
   });
 };

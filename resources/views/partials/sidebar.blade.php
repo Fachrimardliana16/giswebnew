@@ -188,7 +188,7 @@ $accessories = config('gis.accessories', []);
                 </div>
             </x-gis.sidebar.section>
 
-            {{-- Jaringan Section --}}
+            {{-- Monitoring Section --}}
             <x-gis.sidebar.section title="MONITORING LAINNYA" id="jaringan">
                 <div class="space-y-4 py-3 px-2">
                     <x-gis.sidebar.layer-checkbox id="monitoring_pengaduan" label="Data Pengaduan Pelanggan" class="pengduan-checkbox" />
@@ -213,5 +213,4 @@ $accessories = config('gis.accessories', []);
             </x-gis.sidebar.section>
         </div>
     </div>
-
 </aside>

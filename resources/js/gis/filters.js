@@ -148,7 +148,6 @@ export function setupPipaFilters(map, layers) {
   const jenisFilter = document.getElementById('pipaJenisFilter');
   const jaringanFilter = document.getElementById('pipaJaringanFilter');
   const unitFilter = document.getElementById('pipaUnitFilter');
-  const pipeCheckboxes = document.querySelectorAll('.pipa-checkbox');
 
   function buildGlobalPipeCQL() {
     const conditions = [];
@@ -174,23 +173,37 @@ export function setupPipaFilters(map, layers) {
   function applyPipeFilters() {
     const globalCQL = buildGlobalPipeCQL();
     
-    // Update all diameter layers
-    Object.keys(layers).forEach(id => {
-      if (id.startsWith('pipa') && !id.includes('Reservoar') && !id.includes('MA')) {
-        const layer = layers[id];
-        const diameter = id.replace('pipa', '');
-        
-        let finalFilter = `diameter=${diameter}`;
-        if (globalCQL) {
-          finalFilter += ` AND ${globalCQL}`;
-        }
+    // 1. Handle Pipe Diameters (Consolidated)
+    const checkedDiameters = Array.from(document.querySelectorAll('.pipa-checkbox:checked'))
+      .map(cb => cb.id.replace('pipa', ''));
+    
+    if (checkedDiameters.length > 0) {
+      let diameterCQL = `diameter IN (${checkedDiameters.join(',')})`;
+      if (globalCQL) diameterCQL += ` AND ${globalCQL}`;
+      
+      layers.web_pipa.setParams({ cql_filter: diameterCQL, random: Math.random() });
+      if (!map.hasLayer(layers.web_pipa)) layers.web_pipa.addTo(map);
+    } else {
+      if (map.hasLayer(layers.web_pipa)) map.removeLayer(layers.web_pipa);
+    }
 
-        layer.setParams({
-          cql_filter: finalFilter,
-          random: Math.random()
-        });
-      }
-    });
+    // 2. Handle Water Sources (Consolidated)
+    const checkedSources = Array.from(document.querySelectorAll('.pipa-sumberma-checkbox:checked'))
+      .map(cb => {
+        // Map checkbox ID back to source name (This is a bit fragile if names change)
+        const label = cb.parentElement.querySelector('label')?.textContent.trim();
+        return `'${label}'`;
+      });
+    
+    if (checkedSources.length > 0) {
+      let sourceCQL = `sumberma IN (${checkedSources.join(',')})`;
+      if (globalCQL) sourceCQL += ` AND ${globalCQL}`;
+      
+      layers.web_pipa_sumberma.setParams({ cql_filter: sourceCQL, random: Math.random() });
+      if (!map.hasLayer(layers.web_pipa_sumberma)) layers.web_pipa_sumberma.addTo(map);
+    } else {
+      if (map.hasLayer(layers.web_pipa_sumberma)) map.removeLayer(layers.web_pipa_sumberma);
+    }
   }
 
   // Listeners for global dropdowns
@@ -198,25 +211,17 @@ export function setupPipaFilters(map, layers) {
     if (filter) filter.addEventListener('change', applyPipeFilters);
   });
 
-  // Listeners for layer toggles
+  // Listeners for ALL pipe-related checkboxes
   document.querySelectorAll('.pipa-checkbox, .pipa-sumberma-checkbox').forEach(checkbox => {
     checkbox.addEventListener('change', (e) => {
-      const layerId = e.target.id;
-      const layer = layers[layerId];
-
-      if (!layer) return;
-
-      if (e.target.checked) {
-        // If it's a diameter layer, ensure global filters are applied
-        if (layerId.startsWith('pipa') && !layerId.includes('Reservoar') && !layerId.includes('MA')) {
-          applyPipeFilters();
-        }
-        layer.addTo(map);
-      } else {
-        if (map.hasLayer(layer)) {
-          map.removeLayer(layer);
-        }
+      // Toggle label visual state
+      const label = e.target.parentElement.querySelector('label');
+      if (label) {
+        if (e.target.checked) label.classList.add('text-blue-600', 'font-black');
+        else label.classList.remove('text-blue-600', 'font-black');
       }
+      
+      applyPipeFilters();
     });
   });
 }

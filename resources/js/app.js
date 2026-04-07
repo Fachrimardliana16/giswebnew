@@ -6,6 +6,7 @@ import { initControls } from './gis/controls.js';
 import { initMobileToggle, initProfileDropdown, initMobileSearch } from './gis/ui.js';
 import { initSearch } from './gis/search.js';
 import { initFeatureInfo } from './gis/featureInfo.js';
+import { showToast } from './gis/toast.js';
 
 /**
  * Initialize the application when DOM is ready

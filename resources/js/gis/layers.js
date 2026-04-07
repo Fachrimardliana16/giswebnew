@@ -17,94 +17,15 @@ export const initLayers = () => {
       tiled: true
     }),
 
-    // Pipe layers by diameter
-    pipa400: createWMSLayer('web_pipa', { cql_filter: "diameter=400" }),
-    pipa300: createWMSLayer('web_pipa', { cql_filter: "diameter=300" }),
-    pipa250: createWMSLayer('web_pipa', { cql_filter: "diameter=250" }),
-    pipa200: createWMSLayer('web_pipa', { cql_filter: "diameter=200" }),
-    pipa150: createWMSLayer('web_pipa', { cql_filter: "diameter=150" }),
-    pipa100: createWMSLayer('web_pipa', { cql_filter: "diameter=100" }),
-    pipa75: createWMSLayer('web_pipa', { cql_filter: "diameter=75" }),
-    pipa65: createWMSLayer('web_pipa', { cql_filter: "diameter=65" }),
-    pipa50: createWMSLayer('web_pipa', { cql_filter: "diameter=50" }),
-    pipa40: createWMSLayer('web_pipa', { cql_filter: "diameter=40" }),
-    pipa25: createWMSLayer('web_pipa', { cql_filter: "diameter=25" }),
-    pipa20: createWMSLayer('web_pipa', { cql_filter: "diameter=20" }),
-    pipa15: createWMSLayer('web_pipa', { cql_filter: "diameter=15" }),
+    // Consolidated Pipe Layer (by Diameter)
+    web_pipa: createWMSLayer('web_pipa', { 
+      cql_filter: "1=2", // Initially show nothing
+      zIndex: 400
+    }),
 
-    // Water source pipe layers
-    pipaReservoarKaranglewas: createWMSLayer('web_pipa', { 
-      cql_filter: "sumberma='Reservoar Karanglewas'",
-      opacity: 1.0,
-      zIndex: 999
-    }),
-    pipaReservoarMeri: createWMSLayer('web_pipa', { 
-      cql_filter: "sumberma='Reservoar Meri'",
-      opacity: 1.0,
-      zIndex: 999
-    }),
-    pipaReservoarKaranggambas: createWMSLayer('web_pipa', { 
-      cql_filter: "sumberma='Reservoar Karanggambas'",
-      opacity: 1.0,
-      zIndex: 999
-    }),
-    pipaReservoarWalik: createWMSLayer('web_pipa', { 
-      cql_filter: "sumberma='Reservoar Walik'",
-      opacity: 1.0,
-      zIndex: 999
-    }),
-    pipaMALimbangan: createWMSLayer('web_pipa', { 
-      cql_filter: "sumberma='MA Limbangan'",
-      opacity: 1.0,
-      zIndex: 999
-    }),
-    pipaMAKajongan: createWMSLayer('web_pipa', { 
-      cql_filter: "sumberma='MA Kajongan'",
-      opacity: 1.0,
-      zIndex: 999
-    }),
-    pipaMAMulang2: createWMSLayer('web_pipa', { 
-      cql_filter: "sumberma='MA Mulang 2'",
-      opacity: 1.0,
-      zIndex: 999
-    }),
-    pipaCakotWalikKota1: createWMSLayer('web_pipa', { 
-      cql_filter: "sumberma='CAKOT WALIK KOTA 1'",
-      opacity: 1.0,
-      zIndex: 999
-    }),
-    pipaMAGombangan: createWMSLayer('web_pipa', { 
-      cql_filter: "sumberma='MA Gombangan'",
-      opacity: 1.0,
-      zIndex: 999
-    }),
-    pipaCakotWalikKota2: createWMSLayer('web_pipa', { 
-      cql_filter: "sumberma='CAKOT WALIK KOTA   2'",
-      opacity: 1.0,
-      zIndex: 999
-    }),
-    pipaMATukArus: createWMSLayer('web_pipa', { 
-      cql_filter: "sumberma='MA Tuk Arus'",
-      opacity: 1.0,
-      zIndex: 999
-    }),
-    pipaMASikopyah: createWMSLayer('web_pipa', { 
-      cql_filter: "sumberma='MA Sikopyah'",
-      opacity: 1.0,
-      zIndex: 999
-    }),
-    pipaMALimpakdau: createWMSLayer('web_pipa', { 
-      cql_filter: "sumberma='MA Limpakdau'",
-      opacity: 1.0,
-      zIndex: 999
-    }),
-    pipaMAWadasKelir: createWMSLayer('web_pipa', { 
-      cql_filter: "sumberma='MA Wadas Kelir'",
-      opacity: 1.0,
-      zIndex: 999
-    }),
-    pipaMAPajerukan: createWMSLayer('web_pipa', { 
-      cql_filter: "sumberma='MA Pajerukan'",
+    // Consolidated Water Source Pipe Layer
+    web_pipa_sumberma: createWMSLayer('web_pipa', { 
+      cql_filter: "1=2", // Initially show nothing
       opacity: 1.0,
       zIndex: 999
     }),

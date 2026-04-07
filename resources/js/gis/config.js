@@ -3,11 +3,14 @@
  */
 
 // Server and map configuration
-export const GEOSERVER_BASE_URL = 'http://36.93.220.245:8080/geoserver/webgis/wms';
-export const GEOSERVER_WFS_URL = 'http://36.93.220.245:8080/geoserver/webgis/ows';
+export const GEOSERVER_BASE_URL = import.meta.env.VITE_GEOSERVER_URL || 'http://36.93.220.245:8080/geoserver/webgis/wms';
+export const GEOSERVER_WFS_URL = import.meta.env.VITE_GEOSERVER_WFS_URL || 'http://36.93.220.245:8080/geoserver/webgis/ows';
 export const GEOSERVER_URL = GEOSERVER_BASE_URL;
-export const MAP_CENTER = [-7.385735, 109.360430];
-export const DEFAULT_ZOOM = 11;
+export const MAP_CENTER = [
+  parseFloat(import.meta.env.VITE_MAP_LAT) || -7.385735, 
+  parseFloat(import.meta.env.VITE_MAP_LNG) || 109.360430
+];
+export const DEFAULT_ZOOM = parseInt(import.meta.env.VITE_MAP_ZOOM) || 11;
 export const MAP_BOUNDS = [
   [-7.5, 109.2],   // Southwest
   [-7.2, 109.5]    // Northeast
