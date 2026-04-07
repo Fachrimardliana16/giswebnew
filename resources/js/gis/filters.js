@@ -224,7 +224,12 @@ export function setupPipaFilters(map, layers) {
       applyPipeFilters();
     });
   });
+
+  // Initial application to catch any pre-checked states
+  applyPipeFilters();
 }
+
+
 
 /**
  * Setup complaint status and year filtering

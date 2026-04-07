@@ -1,4 +1,19 @@
 /**
+ * Simple HTML sanitizer to prevent XSS
+ * @param {string} str - String to sanitize
+ * @returns {string} Sanitized string
+ */
+const sanitizeHTML = (str) => {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+};
+
+/**
  * Render a stunning premium feature popup HTML for both Search and Map Clicks
  * @param {string} title - The main title (e.g. Customer Name)
  * @param {Object} props - Feature properties object
@@ -7,7 +22,7 @@
  * @returns {string} HTML string
  */
 export function renderFeaturePopup(title, props, lat, lng) {
-    const formattedTitle = (title || 'Detail Informasi').replace(/_/g, ' ');
+    const formattedTitle = sanitizeHTML((title || 'Detail Informasi').replace(/_/g, ' '));
     
     // Label Mapping
     const labelMapping = {
@@ -33,7 +48,7 @@ export function renderFeaturePopup(title, props, lat, lng) {
         
         // Umur WM Formatting
         if (lowerKey === 'umurwm_tahun') {
-            return `${value} Tahun`;
+            return `${sanitizeHTML(value)} Tahun`;
         }
         
         // Date Formatting (Remove Z and T)
@@ -48,16 +63,16 @@ export function renderFeaturePopup(title, props, lat, lng) {
                     });
                 }
             } catch (e) {}
-            return String(value).replace('Z', '').replace('T', ' ');
+            return sanitizeHTML(String(value).replace('Z', '').replace('T', ' '));
         }
 
         // Debit Formatting (to Integer + m3)
         if (lowerKey === 'debit') {
             const val = parseFloat(value);
-            return isNaN(val) ? value : `${Math.floor(val)} m³`;
+            return isNaN(val) ? sanitizeHTML(value) : `${Math.floor(val)} m³`;
         }
 
-        return value;
+        return sanitizeHTML(value);
     };
 
     let content = `
@@ -84,7 +99,8 @@ export function renderFeaturePopup(title, props, lat, lng) {
     
     for (const key in props) {
         if (props[key] !== null && props[key] !== undefined && props[key] !== '' && !excludedKeys.includes(key.toLowerCase())) {
-            const label = labelMapping[key.toLowerCase()] || key.replace(/_/g, ' ').toUpperCase();
+            const rawLabel = labelMapping[key.toLowerCase()] || key.replace(/_/g, ' ').toUpperCase();
+            const label = sanitizeHTML(rawLabel);
             const value = formatValue(key, props[key]);
             
             content += `
@@ -120,3 +136,4 @@ export function renderFeaturePopup(title, props, lat, lng) {
 
     return content;
 }
+

@@ -1,4 +1,11 @@
+# Block access to sensitive files
+<FilesMatch "^\.env|composer\.json|package\.json|package-lock\.json|artisan">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
 <IfModule mod_rewrite.c>
+
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
     </IfModule>

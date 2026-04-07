@@ -55,11 +55,18 @@ const setupBulkGroup = (selectBtnId, uncheckBtnId, checkboxClass, map, layers) =
       document.querySelectorAll(`.${checkboxClass}`).forEach(checkbox => {
         if (!checkbox.checked) {
           checkbox.checked = true;
-          const layer = layers[checkbox.id];
-          if (layer) {
-            layer.addTo(map);
-            const label = checkbox.parentElement.querySelector('label');
-            if (label) label.classList.add('text-blue-600', 'font-black');
+          
+          // Triggers the 'change' event so combined filters (Pipa / Sumber Air) update
+          checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+
+          // For accessories/other layers that are NOT consolidated
+          if (!checkbox.classList.contains('pipa-checkbox') && !checkbox.classList.contains('pipa-sumberma-checkbox')) {
+            const layer = layers[checkbox.id];
+            if (layer) {
+              layer.addTo(map);
+              const label = checkbox.parentElement.querySelector('label');
+              if (label) label.classList.add('text-blue-600', 'font-black');
+            }
           }
         }
       });
@@ -71,11 +78,18 @@ const setupBulkGroup = (selectBtnId, uncheckBtnId, checkboxClass, map, layers) =
       document.querySelectorAll(`.${checkboxClass}`).forEach(checkbox => {
         if (checkbox.checked) {
           checkbox.checked = false;
-          const layer = layers[checkbox.id];
-          if (layer) {
-            layer.remove();
-            const label = checkbox.parentElement.querySelector('label');
-            if (label) label.classList.remove('text-blue-600', 'font-black');
+          
+          // Triggers the 'change' event so combined filters (Pipa / Sumber Air) update
+          checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+
+          // For accessories/other layers that are NOT consolidated
+          if (!checkbox.classList.contains('pipa-checkbox') && !checkbox.classList.contains('pipa-sumberma-checkbox')) {
+            const layer = layers[checkbox.id];
+            if (layer) {
+              layer.remove();
+              const label = checkbox.parentElement.querySelector('label');
+              if (label) label.classList.remove('text-blue-600', 'font-black');
+            }
           }
         }
       });
@@ -83,4 +97,5 @@ const setupBulkGroup = (selectBtnId, uncheckBtnId, checkboxClass, map, layers) =
     });
   }
 };
+
 
