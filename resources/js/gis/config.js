@@ -2,9 +2,9 @@
  * Configuration constants for the GIS application
  */
 
-// Server and map configuration
-export const GEOSERVER_BASE_URL = import.meta.env.VITE_GEOSERVER_URL || 'http://36.93.220.245:8080/geoserver/webgis/wms';
-export const GEOSERVER_WFS_URL = import.meta.env.VITE_GEOSERVER_WFS_URL || 'http://36.93.220.245:8080/geoserver/webgis/ows';
+// Server and map configuration using Laravel Proxy to avoid Mixed Content (HTTPS -> HTTP) issues
+export const GEOSERVER_BASE_URL = '/geo-proxy';
+export const GEOSERVER_WFS_URL = '/geo-proxy';
 export const GEOSERVER_URL = GEOSERVER_BASE_URL;
 export const MAP_CENTER = [
   parseFloat(import.meta.env.VITE_MAP_LAT) || -7.385735, 

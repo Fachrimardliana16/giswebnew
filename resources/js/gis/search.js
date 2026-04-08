@@ -35,7 +35,8 @@ export function initSearch(map) {
         
         try {
             // Build CQL Filter for Search (Supports Name and Account Number)
-            const cqlFilter = `nama ILIKE '%${query}%' OR nolang LIKE '${query}%'`;
+            // Use strToUpperCase for case-insensitive LIKE compatibility
+            const cqlFilter = `strToUpperCase(nama) LIKE '%${query.toUpperCase()}%' OR nolang LIKE '${query}%'`;
             
             const params = new URLSearchParams({
                 service: 'WFS',

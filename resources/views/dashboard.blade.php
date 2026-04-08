@@ -40,7 +40,7 @@
                 <div class="water-loader shadow-lg shadow-blue-500/20"></div>
                 <div class="flex flex-col items-center gap-1.5">
                     <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.1em]">dela, lur. loading sit..</span>
-                    <span id="zoomHint" class="hidden text-[9px] font-bold text-blue-600 uppercase tracking-tighter">zoom maing lur. ben ora kadohen.</span>
+                    <span id="zoomHint" class="hidden text-[9px] font-bold text-blue-600 uppercase tracking-tighter">zoom maning lur. ben ora kadohen.</span>
                 </div>
             </div>
         </div>
