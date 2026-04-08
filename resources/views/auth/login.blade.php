@@ -12,7 +12,7 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
     </style>
 </head>
-<body class="bg-slate-50 antialiased overflow-hidden">
+<body class="bg-slate-50 antialiased overflow-y-auto">
     <div class="min-h-screen flex">
         <!-- Left Panel: Gradient and Branding (Hidden on mobile) -->
         <div class="hidden lg:flex w-1/2 bg-gradient-to-br from-blue-700 via-blue-600 to-white items-center justify-center p-12 relative overflow-hidden">
@@ -42,15 +42,15 @@
         <div class="w-full lg:w-1/2 flex items-center justify-center p-6 bg-white shadow-[-10px_0_30px_rgba(0,0,0,0.02)] relative z-20">
             <div class="max-w-md w-full">
                 <!-- Mobile Logo Header -->
-                <div class="lg:hidden text-center mb-10">
-                    <img src="https://cdn-icons-png.flaticon.com/512/7471/7471547.png" alt="Logo" class="w-16 h-16 mx-auto mb-4">
-                    <h2 class="text-3xl font-black text-slate-800 tracking-tighter">WEBGIS</h2>
-                    <p class="text-xs font-black text-blue-600 uppercase tracking-[0.2em]">Tirta Perwira</p>
+                <div class="lg:hidden text-center mb-6">
+                    <img src="https://cdn-icons-png.flaticon.com/512/7471/7471547.png" alt="Logo" class="w-12 h-12 mx-auto mb-3">
+                    <h2 class="text-2xl font-black text-slate-800 tracking-tighter uppercase">WEB<span class="text-blue-600">GIS</span></h2>
+                    <p class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em]">Tirta Perwira</p>
                 </div>
 
-                <div class="mb-10 text-center lg:text-left">
-                    <h3 class="text-3xl font-black text-slate-800 tracking-tight mb-2">Selamat Datang di WEBGIS</h3>
-                    <p class="text-slate-500 font-medium">Silakan login untuk mengakses dashboard Anda</p>
+                <div class="mb-6 lg:mb-10 text-center lg:text-left">
+                    <h3 class="text-2xl lg:text-3xl font-black text-slate-800 tracking-tight mb-1 lg:mb-2 leading-tight">Selamat Datang di WEBGIS</h3>
+                    <p class="text-slate-500 text-sm lg:text-base font-medium">Silakan login untuk mengakses dashboard</p>
                 </div>
 
                 @if($errors->has('error'))
@@ -100,7 +100,7 @@
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-between pt-2">
+                    <div class="flex items-center justify-between pt-1 lg:pt-2">
                         <label class="flex items-center group cursor-pointer">
                             <div class="relative flex items-center">
                                 <input type="checkbox" class="peer h-5 w-5 cursor-pointer appearance-none rounded-lg border-2 border-slate-200 transition-all checked:border-blue-600 checked:bg-blue-600 focus:outline-none">
@@ -114,12 +114,12 @@
                     </div>
 
                     <button type="submit" 
-                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest py-5 rounded-2xl shadow-xl shadow-blue-500/30 active:scale-[0.97] transition-all duration-200 focus:outline-none focus:ring-8 focus:ring-blue-500/30">
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest py-4 lg:py-5 rounded-2xl shadow-xl shadow-blue-500/30 active:scale-[0.97] transition-all duration-200 focus:outline-none focus:ring-8 focus:ring-blue-500/30">
                         Masuk Ke Sistem
                     </button>
                 </form>
 
-                <div class="mt-16 text-center">
+                <div class="mt-8 lg:mt-16 text-center pb-6">
                     <p class="text-[8px] font-black text-slate-300 uppercase tracking-[0.25em] mb-4">Powered By</p>
                     <div class="flex flex-col gap-1">
                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
