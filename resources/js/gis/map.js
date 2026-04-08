@@ -8,7 +8,7 @@ import { showToast } from './toast.js';
 export const initMap = () => {
   // Define base layers
   const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 22,
+    maxZoom: 19,
     attribution: '© OpenStreetMap Contributors'
   });
 
@@ -25,7 +25,13 @@ export const initMap = () => {
     maxZoom: 22,
     maxBounds: MAP_BOUNDS,
     maxBoundsViscosity: 0.7,
+    zoomControl: false
   });
+
+  // Add zoom control at bottom-right
+  L.control.zoom({
+    position: 'bottomright'
+  }).addTo(map);
 
   // Default layer
   osm.addTo(map);

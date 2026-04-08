@@ -84,5 +84,48 @@ export const createWMSLayer = (name, customOptions = {}) => {
     }
 
     const finalOptions = { ...baseOptions, ...customOptions };
-    return L.tileLayer.wms(GEOSERVER_URL, finalOptions);
+    const layer = L.tileLayer.wms(GEOSERVER_URL, finalOptions);
+
+    // Track loading state globally
+    if (typeof window.loadingLayersCount === 'undefined') {
+        window.loadingLayersCount = 0;
+    }
+
+    const showLoader = () => {
+        window.loadingLayersCount++;
+        const loader = document.getElementById('loadingIndicator');
+        const zoomHint = document.getElementById('zoomHint');
+        
+        if (loader) loader.classList.replace('hidden', 'flex');
+        
+        // Show zoom hint if current zoom is lower than this layer's minZoom
+        if (window.map) {
+            const currentZoom = window.map.getZoom();
+            if (currentZoom < baseOptions.minZoom && zoomHint) {
+                zoomHint.classList.remove('hidden');
+            }
+        }
+
+        // Trigger watchdog if available (from dashboard.blade.php)
+        if (window.startLoadingWatchdog) window.startLoadingWatchdog();
+    };
+
+    const hideLoader = () => {
+        window.loadingLayersCount--;
+        if (window.loadingLayersCount <= 0) {
+            window.loadingLayersCount = 0;
+            const loader = document.getElementById('loadingIndicator');
+            const zoomHint = document.getElementById('zoomHint');
+            if (loader) loader.classList.replace('flex', 'hidden');
+            if (zoomHint) zoomHint.classList.add('hidden');
+            // Stop watchdog
+            if (window.stopLoadingWatchdog) window.stopLoadingWatchdog();
+        }
+    };
+
+    layer.on('loading', showLoader);
+    layer.on('load', hideLoader);
+    layer.on('tileerror', hideLoader);
+
+    return layer;
 };

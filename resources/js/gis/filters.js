@@ -203,10 +203,6 @@ export function setupPipaFilters(map, layers) {
       
       const finalCQL = finalConditions.join(' AND ');
       
-      // DIAGNOSTIC ALERT: This shows us exactly what's being sent
-      alert('APPLYING FILTER: ' + finalCQL);
-      console.log('Final Pipe CQL:', finalCQL);
-      
       layers.web_pipa.setParams({ 
         cql_filter: finalCQL, 
         random: Math.random(),

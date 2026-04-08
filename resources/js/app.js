@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         // Initialize map
         const map = await initMap();
+        window.map = map;
         
         // Initialize layers
         const layerGroups = initLayers(map);

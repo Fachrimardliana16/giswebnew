@@ -22,7 +22,7 @@
     
     @stack('styles')
 </head>
-<body class="bg-slate-50 min-h-screen flex flex-col antialiased text-slate-900" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+<body class="bg-slate-50 h-screen overflow-hidden flex flex-col antialiased text-slate-900" style="font-family: 'Plus Jakarta Sans', sans-serif;">
     <!-- Sidebar Backdrop (Mobile only) -->
     <div id="sidebarBackdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden transition-opacity duration-300"></div>
 
