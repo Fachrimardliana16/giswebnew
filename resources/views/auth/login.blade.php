@@ -49,7 +49,7 @@
                 </div>
 
                 <div class="mb-10 text-center lg:text-left">
-                    <h3 class="text-3xl font-black text-slate-800 tracking-tight mb-2">Selamat Datang 👋</h3>
+                    <h3 class="text-3xl font-black text-slate-800 tracking-tight mb-2">Selamat Datang di WEBGIS</h3>
                     <p class="text-slate-500 font-medium">Silakan login untuk mengakses dashboard Anda</p>
                 </div>
 

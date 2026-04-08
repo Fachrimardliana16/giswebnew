@@ -7,7 +7,8 @@ $accessories = config('gis.accessories', []);
 
 <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-glass border-r border-white/20 flex flex-col z-[60] -translate-x-full md:translate-x-0 md:relative transition-all duration-500 ease-in-out shadow-premium">
     <div class="flex-grow overflow-y-auto px-4 py-8 custom-scrollbar">
-        <div class="px-2 mb-8">
+
+        <div class="px-2 mb-4 mt-4">
             <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] flex items-center gap-2">
                 <span class="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_#3b82f6]"></span>
                 LAYER MASTER CONTROL
@@ -235,6 +236,57 @@ $accessories = config('gis.accessories', []);
                     </div>
                 </div>
             </x-gis.sidebar.section>
+
+            @php
+                $allowedAdmins = ['fachri', 'kholiq', 'aulia'];
+                $isSuperAdmin = auth()->check() && in_array(auth()->user()->username, $allowedAdmins);
+            @endphp
+
+            @if($isSuperAdmin)
+                {{-- Main Navigation for Admin --}}
+                <div class="px-2 mb-6">
+                    <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] flex items-center gap-2 mb-4">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_#3b82f6]"></span>
+                        MAIN NAVIGATION
+                    </h2>
+                    <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:text-blue-600 hover:bg-blue-50/50 rounded-2xl transition-all group {{ request()->routeIs('dashboard') ? 'bg-blue-50 text-blue-600 border border-blue-100' : '' }}">
+                        <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 20l-5.447-2.724A2 2 0 013 15.382V5.618a2 2 0 011.447-1.894L9 1m0 19l6-3m-6 3V1m6 16l5.447 2.724A2 2 0 0021 17.882V8.118a2 2 0 00-1.447-1.894L15 4m0 13V4m0 0L9 1"></path>
+                            </svg>
+                        </div>
+                        <span class="text-[11px] font-bold uppercase tracking-wide">Dashboard Peta</span>
+                    </a>
+                </div>
+
+                {{-- Administration Section --}}
+                <div class="pt-6 mt-6 border-t border-slate-200/50 mb-8">
+                    <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] flex items-center gap-2 mb-4 px-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
+                        ADMIN SETTINGS
+                    </h2>
+                    
+                    <div class="space-y-1">
+                        <a href="{{ route('users.index') }}" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:text-blue-600 hover:bg-blue-50/50 rounded-2xl transition-all group {{ request()->routeIs('users.*') ? 'bg-blue-50 text-blue-600 border border-blue-100' : '' }}">
+                            <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-[11px] font-bold uppercase tracking-wide">Manajemen Pengguna</span>
+                        </a>
+
+                        <a href="{{ route('roles.index') }}" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50/50 rounded-2xl transition-all group {{ request()->routeIs('roles.*') ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : '' }}">
+                            <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-[11px] font-bold uppercase tracking-wide">Role & Hak Akses</span>
+                        </a>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 </aside>
