@@ -165,44 +165,57 @@ export function setupPipaFilters(map, layers) {
       }
     }
     if (unitFilter && unitFilter.value) {
-      conditions.push(`unitikk='${unitFilter.value}'`);
+      // Use LIKE to handle both 'Unit IKK Name' and just 'Name'
+      conditions.push(`unitikk LIKE '%${unitFilter.value}%'`);
     }
     return conditions.length > 0 ? conditions.join(' AND ') : null;
   }
 
   function applyPipeFilters() {
     const globalCQL = buildGlobalPipeCQL();
-    
-    // 1. Handle Pipe Diameters (Consolidated)
+    const subConditions = [];
+
+    // 1. Handle Pipe Diameters
     const checkedDiameters = Array.from(document.querySelectorAll('.pipa-checkbox:checked'))
       .map(cb => cb.id.replace('pipa', ''));
     
     if (checkedDiameters.length > 0) {
-      let diameterCQL = `diameter IN (${checkedDiameters.join(',')})`;
-      if (globalCQL) diameterCQL += ` AND ${globalCQL}`;
-      
-      layers.web_pipa.setParams({ cql_filter: diameterCQL, random: Math.random() });
-      if (!map.hasLayer(layers.web_pipa)) layers.web_pipa.addTo(map);
-    } else {
-      if (map.hasLayer(layers.web_pipa)) map.removeLayer(layers.web_pipa);
+      subConditions.push(`diameter IN (${checkedDiameters.join(',')})`);
     }
 
     // 2. Handle Water Sources (Consolidated)
     const checkedSources = Array.from(document.querySelectorAll('.pipa-sumberma-checkbox:checked'))
       .map(cb => {
-        // Map checkbox ID back to source name (This is a bit fragile if names change)
-        const label = cb.parentElement.querySelector('label')?.textContent.trim();
-        return `'${label}'`;
+        const val = cb.dataset.value.toLowerCase();
+        return `strToLowerCase(sumberma) LIKE '%${val}%'`;
       });
     
     if (checkedSources.length > 0) {
-      let sourceCQL = `sumberma IN (${checkedSources.join(',')})`;
-      if (globalCQL) sourceCQL += ` AND ${globalCQL}`;
+      // Use OR for same-category source naming, e.g. (strToLowerCase(sumberma) LIKE '%a%' OR ...)
+      subConditions.push(`(${checkedSources.join(' OR ')})`);
+    }
+
+    // Combine all filters: (Diameters OR Sources) AND (Global Dropdowns)
+    if (subConditions.length > 0 || globalCQL) {
+      const finalConditions = [];
+      if (subConditions.length > 0) finalConditions.push(...subConditions);
+      if (globalCQL) finalConditions.push(`(${globalCQL})`);
       
-      layers.web_pipa_sumberma.setParams({ cql_filter: sourceCQL, random: Math.random() });
-      if (!map.hasLayer(layers.web_pipa_sumberma)) layers.web_pipa_sumberma.addTo(map);
+      const finalCQL = finalConditions.join(' AND ');
+      
+      // DIAGNOSTIC ALERT: This shows us exactly what's being sent
+      alert('APPLYING FILTER: ' + finalCQL);
+      console.log('Final Pipe CQL:', finalCQL);
+      
+      layers.web_pipa.setParams({ 
+        cql_filter: finalCQL, 
+        random: Math.random(),
+        tiled: false // Force non-tiled for fresh data during debug
+      });
+      if (!map.hasLayer(layers.web_pipa)) layers.web_pipa.addTo(map);
     } else {
-      if (map.hasLayer(layers.web_pipa_sumberma)) map.removeLayer(layers.web_pipa_sumberma);
+      // No filters selected at all, hide the layer
+      if (map.hasLayer(layers.web_pipa)) map.removeLayer(layers.web_pipa);
     }
   }
 
@@ -215,7 +228,8 @@ export function setupPipaFilters(map, layers) {
   document.querySelectorAll('.pipa-checkbox, .pipa-sumberma-checkbox').forEach(checkbox => {
     checkbox.addEventListener('change', (e) => {
       // Toggle label visual state
-      const label = e.target.parentElement.querySelector('label');
+      // Navigation: e.target (input) -> .relative (parent) -> .group (container) -> label (sibling)
+      const label = e.target.closest('.group')?.querySelector('label');
       if (label) {
         if (e.target.checked) label.classList.add('text-blue-600', 'font-black');
         else label.classList.remove('text-blue-600', 'font-black');

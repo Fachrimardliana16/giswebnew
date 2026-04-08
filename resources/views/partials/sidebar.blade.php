@@ -137,7 +137,7 @@ $accessories = config('gis.accessories', []);
                         <option value="Cabang Goentoer Djarjono">Cabang Goentoer Djarjono</option>
                         <hr class="my-1 border-white/10">
                         @foreach(['Bobotsari', 'Bojongsari', 'Bukateja', 'Kaligondang', 'Kalimanah', 'Kemangkon', 'Kutasari', 'Mrebet', 'Padamara', 'Rembang'] as $unit)
-                            <option value="Unit IKK {{ $unit }}">Unit IKK {{ $unit }}</option>
+                            <option value="{{ $unit }}">{{ $unit }}</option>
                         @endforeach
                     </x-gis.sidebar.filter-select>
                 </div>
@@ -146,32 +146,56 @@ $accessories = config('gis.accessories', []);
                     <button id="selectAllPipa" class="flex-1 bg-blue-50 text-blue-600 text-[9px] font-black py-2 rounded-xl border border-blue-100 hover:bg-blue-600 hover:text-white transition-all uppercase tracking-widest">Pilih Semua</button>
                     <button id="uncheckAllPipa" class="flex-1 bg-slate-50 text-slate-400 text-[9px] font-black py-2 rounded-xl border border-slate-100 hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all uppercase tracking-widest">Hapus Semua</button>
                 </div>
-                <div class="grid grid-cols-2 gap-x-2 gap-y-3 px-1">
-                    @foreach($pipeSizes as $size)
-                        <x-gis.sidebar.layer-checkbox id="pipa{{ $size }}" label="Ø {{ $size }} mm" class="pipa-checkbox" />
-                    @endforeach
-                </div>
-            </x-gis.sidebar.section>
+                
+                <div class="space-y-6">
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 mb-3 uppercase tracking-widest opacity-70">— FILTER DIAMETER PIPA</p>
+                        <div class="grid grid-cols-2 gap-x-2 gap-y-3 px-1">
+                            @foreach($pipeSizes as $size)
+                                <x-gis.sidebar.layer-checkbox id="pipa{{ $size }}" label="Ø {{ $size }} mm" class="pipa-checkbox" />
+                            @endforeach
+                        </div>
+                    </div>
 
-            {{-- Sumber Air Section --}}
-            <x-gis.sidebar.section title="SUMBER AIR & RESERVOAR" id="sumber_air">
-                <div class="flex gap-2 mb-4 px-1">
-                    <button id="selectAllSumberma" class="flex-1 bg-blue-50 text-blue-600 text-[9px] font-black py-2 rounded-xl border border-blue-100 hover:bg-blue-600 hover:text-white transition-all uppercase tracking-widest">Pilih Semua</button>
-                    <button id="uncheckAllSumberma" class="flex-1 bg-slate-50 text-slate-400 text-[9px] font-black py-2 rounded-xl border border-slate-100 hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all uppercase tracking-widest">Hapus Semua</button>
-                </div>
-                <div class="space-y-2 px-1">
-                    <p class="text-[9px] font-black text-slate-400 mb-2 uppercase tracking-widest opacity-70">— RESERVOAR</p>
-                    <x-gis.sidebar.layer-checkbox id="pipaReservoarMeri" label="Reservoar Meri" class="pipa-sumberma-checkbox" />
-                    <x-gis.sidebar.layer-checkbox id="pipaReservoarWalik" label="Reservoar Walik" class="pipa-sumberma-checkbox" />
-                    <x-gis.sidebar.layer-checkbox id="pipaReservoarKaranglewas" label="Reservoar Karanglewas" class="pipa-sumberma-checkbox" />
-                    <x-gis.sidebar.layer-checkbox id="pipaReservoarKaranggambas" label="Reservoar Karanggambas" class="pipa-sumberma-checkbox" />
-                    
-                    <p class="text-[9px] font-black text-slate-400 mt-4 mb-2 uppercase tracking-widest opacity-70">— MATA AIR (MA)</p>
-                    <x-gis.sidebar.layer-checkbox id="pipaMALimbangan" label="MA Limbangan" class="pipa-sumberma-checkbox" />
-                    <x-gis.sidebar.layer-checkbox id="pipaMAKajongan" label="MA Kajongan" class="pipa-sumberma-checkbox" />
-                    <x-gis.sidebar.layer-checkbox id="pipaMAGombangan" label="MA Gombangan" class="pipa-sumberma-checkbox" />
-                    <x-gis.sidebar.layer-checkbox id="pipaMASikopyah" label="MA Sikopyah" class="pipa-sumberma-checkbox" />
-                    <x-gis.sidebar.layer-checkbox id="pipaMATukArus" label="MA Tuk Arus" class="pipa-sumberma-checkbox" />
+                    <div class="pt-4 border-t border-slate-100/50">
+                        <p class="text-[9px] font-black text-slate-400 mb-3 uppercase tracking-widest opacity-70">— FILTER SUMBER AIR & RESERVOAR</p>
+                        <div class="flex gap-2 mb-4 px-1">
+                            <button id="selectAllSumberma" class="flex-1 bg-blue-50 text-blue-600 text-[9px] font-black py-2 rounded-xl border border-blue-100 hover:bg-blue-600 hover:text-white transition-all uppercase tracking-widest">Pilih Semua</button>
+                            <button id="uncheckAllSumberma" class="flex-1 bg-slate-50 text-slate-400 text-[9px] font-black py-2 rounded-xl border border-slate-100 hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all uppercase tracking-widest">Hapus Semua</button>
+                        </div>
+                        <div class="space-y-4 px-1 mt-4">
+                            <div>
+                                <p class="text-[8px] font-black text-slate-400 mb-2 uppercase tracking-tighter opacity-60">RESERVOAR</p>
+                                <div class="space-y-2">
+                                    <x-gis.sidebar.layer-checkbox id="pipaReservoarMeri" label="Reservoar Meri" value="Reservoar Meri" class="pipa-sumberma-checkbox" />
+                                    <x-gis.sidebar.layer-checkbox id="pipaReservoarWalik" label="Reservoar Walik" value="Reservoar Walik" class="pipa-sumberma-checkbox" />
+                                    <x-gis.sidebar.layer-checkbox id="pipaReservoarKaranglewas" label="Reservoar Karanglewas" value="Reservoar Karanglewas" class="pipa-sumberma-checkbox" />
+                                    <x-gis.sidebar.layer-checkbox id="pipaReservoarKaranggambas" label="Reservoar Karanggambas" value="Reservoar Karanggambas" class="pipa-sumberma-checkbox" />
+                                    <x-gis.sidebar.layer-checkbox id="pipaReservoarBukateja" label="Reservoar Bukateja" value="Reservoar Bukateja" class="pipa-sumberma-checkbox" />
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="text-[8px] font-black text-slate-400 mb-2 uppercase tracking-tighter opacity-60">MATA AIR (MA)</p>
+                                <div class="space-y-2">
+                                    <x-gis.sidebar.layer-checkbox id="pipaMALimbangan" label="MA Limbangan" value="MA Limbangan" class="pipa-sumberma-checkbox" />
+                                    <x-gis.sidebar.layer-checkbox id="pipaMAKajongan" label="MA Kajongan" value="MA Kajongan" class="pipa-sumberma-checkbox" />
+                                    <x-gis.sidebar.layer-checkbox id="pipaMAGombangan" label="MA Gombangan" value="MA Gombangan" class="pipa-sumberma-checkbox" />
+                                    <x-gis.sidebar.layer-checkbox id="pipaMASikopyah" label="MA Sikopyah" value="MA Sikopyah" class="pipa-sumberma-checkbox" />
+                                    <x-gis.sidebar.layer-checkbox id="pipaMATukArus" label="MA Tuk Arus" value="MA Tuk Arus" class="pipa-sumberma-checkbox" />
+                                    <x-gis.sidebar.layer-checkbox id="pipaMAWalik" label="MA Walik" value="MA Walik" class="pipa-sumberma-checkbox" />
+                                    <x-gis.sidebar.layer-checkbox id="pipaMABataPutih" label="MA Bata Putih" value="MA Bata Putih" class="pipa-sumberma-checkbox" />
+                                </div>
+                            </div>
+
+                            <div>
+                                <p class="text-[8px] font-black text-slate-400 mb-2 uppercase tracking-tighter opacity-60">LAINNYA</p>
+                                <div class="space-y-2">
+                                    <x-gis.sidebar.layer-checkbox id="pipaCAKOTWalik" label="CAKOT Walik Kota 1" value="CAKOT WALIK KOTA 1" class="pipa-sumberma-checkbox" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </x-gis.sidebar.section>
 

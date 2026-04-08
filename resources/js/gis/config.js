@@ -19,7 +19,7 @@ export const MAP_BOUNDS = [
 // Layer zoom level configurations
 export const LAYER_ZOOM_LEVELS = {
   analisa_pelanggan: { minZoom: 12, maxZoom: 22 },
-  web_pipa: { minZoom: 12, maxZoom: 22 },
+  web_pipa: { minZoom: 10, maxZoom: 22 },
   // Accessories
   all_airvalve: { minZoom: 12, maxZoom: 22 },
   all_bend: { minZoom: 12, maxZoom: 22 },

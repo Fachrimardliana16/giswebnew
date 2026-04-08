@@ -19,12 +19,12 @@ export const initControls = (map, layers) => {
         if (this.checked) {
           layer.addTo(map);
           // Add visual feedback
-          const label = this.parentElement.querySelector('label');
+          const label = this.closest('.group')?.querySelector('label');
           if (label) label.classList.add('text-blue-600', 'font-black');
         } else {
           layer.remove();
           // Remove visual feedback
-          const label = this.parentElement.querySelector('label');
+          const label = this.closest('.group')?.querySelector('label');
           if (label) label.classList.remove('text-blue-600', 'font-black');
         }
       }
@@ -64,7 +64,7 @@ const setupBulkGroup = (selectBtnId, uncheckBtnId, checkboxClass, map, layers) =
             const layer = layers[checkbox.id];
             if (layer) {
               layer.addTo(map);
-              const label = checkbox.parentElement.querySelector('label');
+              const label = checkbox.closest('.group')?.querySelector('label');
               if (label) label.classList.add('text-blue-600', 'font-black');
             }
           }
@@ -87,7 +87,7 @@ const setupBulkGroup = (selectBtnId, uncheckBtnId, checkboxClass, map, layers) =
             const layer = layers[checkbox.id];
             if (layer) {
               layer.remove();
-              const label = checkbox.parentElement.querySelector('label');
+              const label = checkbox.closest('.group')?.querySelector('label');
               if (label) label.classList.remove('text-blue-600', 'font-black');
             }
           }

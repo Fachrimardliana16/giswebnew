@@ -17,17 +17,12 @@ export const initLayers = () => {
       tiled: true
     }),
 
-    // Consolidated Pipe Layer (by Diameter)
+    // Consolidated Pipe Layer (Handles Diameter and Source filters)
     web_pipa: createWMSLayer('web_pipa', { 
       cql_filter: "1=2", // Initially show nothing
-      zIndex: 400
-    }),
-
-    // Consolidated Water Source Pipe Layer
-    web_pipa_sumberma: createWMSLayer('web_pipa', { 
-      cql_filter: "1=2", // Initially show nothing
-      opacity: 1.0,
-      zIndex: 999
+      zIndex: 400,
+      tiled: false, // Turn off tiling for dynamic filtering to ensure fresh data
+      buffer: 0
     }),
 
     // Complaint monitoring layer
