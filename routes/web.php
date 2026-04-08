@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\GeoServerProxyController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -16,6 +17,7 @@ Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [MapController::class, 'index'])->name('dashboard');
+    Route::get('/geo-proxy', [GeoServerProxyController::class, 'proxy'])->name('geo.proxy');
     
     // User & Role Management (Admin only)
     Route::middleware(['admin.access'])->group(function () {
