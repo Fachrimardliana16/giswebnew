@@ -1,0 +1,45 @@
+fix(map+popup): header menyatu, tombol lokasi, popup informatif, cache tile, batas peta
+
+1. Header tidak menyatu dengan peta.
+   Penyebab: sticky + backdrop-filter + border bawah putih terang membuat
+   header tampak sebagai lapisan mengambang, plus celah 1px ke peta.
+   Perbaikan: position relative, backdrop-filter none, gradient solid,
+   border dihapus (diganti pseudo-element gradien halus), margin-top -1px
+   pada area konten. Terukur: tanpa_celah=true, peta_mulai=56 (header=56).
+
+2. Tombol lokasi tidak berfungsi.
+   Penyebab: FAB [data-location-fab] tidak pernah diberi event listener.
+   Perbaikan: FAB meneruskan klik ke #getLocationBtn yang sudah punya
+   logika geolocation. Tombol desktop disembunyikan eksplisit di mobile
+   (sebelumnya display:flex karena aturan min-height mengalahkan class
+   hidden). Terukur: geolocation_dipanggil='dipanggil', asli_display=none.
+
+3. Popup data peta ditingkatkan.
+   Sebelum: daftar properti datar, tanpa status, tanpa ringkasan.
+   Sesudah (terukur pada klik peta): judul 'SRI YUSTINA', badge status
+   'Aktif Normal', 3 kartu ringkasan (Pemakaian/Tunggakan/Tagihan),
+   5 grup data (Identitas, Pemakaian, Tagihan, Water Meter, Informasi
+   Lain), 16 baris, koordinat fitur, tombol Navigasi.
+   Ditambah: CSS popup.css terpisah, max height + scroll internal,
+   label Indonesia, format rupiah/m3/L-detik, tanggal id-ID,
+   koordinat diambil dari geometri fitur (bukan titik klik).
+
+4. Setiap zoom/pan render ulang terus.
+   Penyebab: (a) web_pipa & filter memakai tiled:false sehingga tiap
+   gerakan meminta 1 gambar seukuran layar; (b) setParams memakai
+   Math.random() sehingga URL tile selalu baru dan cache tak pernah kena.
+   Perbaikan: tiled selalu true, keepBuffer 3, updateWhenIdle true,
+   updateWhenZooming false, dan cache-busting diganti hash ISI filter
+   (versiFilter). setParams kini dilewati bila filter tidak berubah.
+   Terukur: filter sama dua kali -> gelombang kedua 0 request tile
+   (sebelumnya 14), tidak ada parameter random.
+
+5. Pojok peta tidak bisa digeser.
+   Penyebab: maxBounds terlalu sempit (lat -7.5..-7.2, lng 109.2..109.5)
+   dengan viscosity 0.7 sehingga peta "mentok" sebelum pojok wilayah.
+   Perbaikan: bounds diperluas (-7.72..-7.10, 109.02..109.72),
+   viscosity 0.25, minZoom 9, zoomSnap 0.5.
+   Terukur: bisa_geser_pojok=true.
+
+Verifikasi: PHPUnit 39 passed. Desktop 1440 tidak berubah (nav none,
+tombol lokasi flex, header sticky, peta 796px).

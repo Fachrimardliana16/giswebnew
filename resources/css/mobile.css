@@ -26,19 +26,46 @@
         display: none !important;
     }
 
-    /* Header ringkas + safe-area atas */
+    /* Header ringkas + safe-area atas, MENYATU dengan konten:
+       - sticky dimatikan (layout flex sudah menahan header di atas)
+       - backdrop-filter dimatikan agar tidak terlihat seperti lapisan
+         mengambang; warna dibuat solid
+       - border bawah dihilangkan, diganti shadow tipis */
     body > header {
-        height: var(--mobile-header-h) !important;
-        padding-top: var(--safe-top);
+        position: relative !important;
         height: calc(var(--mobile-header-h) + var(--safe-top)) !important;
+        padding-top: var(--safe-top);
         padding-left: 12px;
         padding-right: 12px;
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        border-bottom: 0 !important;
+        box-shadow: none !important;
+        z-index: 50;
     }
 
-    /* Area konten: peta mengisi sisa tinggi di atas bottom nav */
+    /* Garis pemisah halus lewat pseudo-element, bukan border terang */
+    body > header::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 1px;
+        background: linear-gradient(90deg,
+            rgba(255, 255, 255, 0.05) 0%,
+            rgba(255, 255, 255, 0.16) 50%,
+            rgba(255, 255, 255, 0.05) 100%);
+        pointer-events: none;
+    }
+
+    /* Area konten: peta mengisi sisa tinggi di atas bottom nav.
+       margin-top negatif 1px menutup celah 1px antara header dan peta. */
     body > .flex-1 {
         padding-bottom: calc(var(--mobile-nav-h) + var(--safe-bottom));
         min-height: 0;
+        margin-top: -1px;
     }
 
     /* Peta penuh sampai nav */
@@ -46,7 +73,15 @@
         height: 100% !important;
     }
 
-    /* Kontrol peta digeser supaya tidak tertutup nav / FAB */
+    /* Kontrol peta desktop disembunyikan di mobile (sudah ada FAB).
+       Penting: aturan min-height global bisa mengalahkan `hidden`,
+       jadi pakai display:none eksplisit. */
+    #getLocationBtn,
+    [data-basemap-fab-desktop] {
+        display: none !important;
+    }
+
+    /* Tombol peta digeser supaya tidak tertutup nav / FAB */
     .leaflet-bottom.leaflet-right {
         margin-bottom: calc(var(--mobile-nav-h) + 68px + var(--safe-bottom)) !important;
         margin-right: 10px !important;

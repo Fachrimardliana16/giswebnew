@@ -1,0 +1,26 @@
+fix(mobile): header sheet terpotong, nav 5 tab dengan Peta di tengah, Akun ke header
+
+1. BUG header sheet terpotong & bisa di-scroll sendiri:
+   aturan CSS ".sidebar-sheet > div" mengenai SEMUA anak sheet termasuk
+   gagang dan header. Terukur sebelum: handle h=25 scrollH=27 clientH=25,
+   head h=35 scrollH=49 clientH=34 (tombol tutup terpangkas), ketiganya
+   flex:1 1 auto.
+   Diperbaiki: hanya anak ke-3 yang jadi area scroll; gagang & header
+   dipaksa flex:0 0 auto + overflow:visible.
+   Sesudah: head_h=55, close 40x40 di_dalam_head=true, handle tidak
+   scroll, hanya area isi (672px) yang scroll.
+
+2. Nav sekarang 5 tab sesuai urutan diminta:
+   Pelanggan | Pengaduan | PETA | Jaringan | Aksesoris
+   - Peta di TENGAH dengan tombol bulat 54px terangkat (gradient biru,
+     border putih, shadow), state aktif diberi glow
+   - Pengaduan, Jaringan, Aksesoris dipisah jadi tab sendiri-sendiri
+     (sebelumnya digabung jadi 1-2 tab)
+   - tiap tab punya judul & subjudul sheet sendiri + badge sendiri
+
+3. Tab Akun DIHAPUS dari bottom nav, dipindah ke header di samping
+   ikon cari (avatar inisial). Terukur mobile: search x=270, akun x=322.
+   Dropdown tetap muncul sebagai bottom sheet di bawah (top 636-844).
+
+Verifikasi: PHPUnit 39 passed. Desktop 1440 tidak berubah (nav none,
+akun mobile none, profil desktop flex, header sheet none, sidebar 302px).

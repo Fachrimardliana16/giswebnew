@@ -192,6 +192,20 @@ function siapkanBasemap() {
         });
     });
 
+    // FAB lokasi: teruskan ke tombol asli.
+    // Tombol asli disembunyikan di mobile (display:none), jadi .click() tetap
+    // memicu listener-nya — yang penting handler terpasang di sana.
+    document.querySelectorAll('[data-location-fab]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const asli = document.getElementById('getLocationBtn');
+            if (!asli) {
+                window.showToast?.('Fitur lokasi tidak tersedia', 'error', 3000);
+                return;
+            }
+            asli.click();
+        });
+    });
+
     // Tombol desktop membuka sheet pilihan (perilaku lama dipertahankan)
     document.querySelectorAll('[data-basemap-fab-desktop]').forEach(btn => {
         btn.addEventListener('click', () => {

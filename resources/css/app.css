@@ -1,4 +1,5 @@
 @import "./mobile.css";
+@import "./popup.css";
 
 @tailwind base;
 @tailwind components;
@@ -251,34 +252,6 @@ body, html {
     border-bottom-width: 1px;
 }
 
-/* Custom Leaflet Popup Refinement */
-.custom-gis-popup .leaflet-popup-content-wrapper {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(8px);
-    border-radius: 1.25rem;
-    padding: 0;
-    overflow: hidden;
-    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.15);
-}
-
-.custom-gis-popup .leaflet-popup-content {
-    margin: 0;
-    width: auto !important;
-}
-
-.custom-gis-popup .leaflet-popup-tip-container {
-    display: none; /* Cleaner look on mobile */
-}
-
-@media (max-width: 640px) {
-    .custom-gis-popup {
-        margin-bottom: 20px;
-    }
-    
-    .leaflet-popup {
-        z-index: 35 !important; /* Above other map elements but below sidebar (60) */
-    }
-}
 
 * {
     transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;

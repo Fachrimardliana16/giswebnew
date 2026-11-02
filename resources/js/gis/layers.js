@@ -21,7 +21,9 @@ export const initLayers = () => {
     web_pipa: createWMSLayer('web_pipa', { 
       cql_filter: "1=2", // Initially show nothing
       zIndex: 400,
-      tiled: false, // Turn off tiling for dynamic filtering to ensure fresh data
+      // tiled tetap true: tile peringan beban & bisa di-cache.
+      // Data segar dijamin lewat versi filter di URL, bukan random.
+      tiled: true,
       buffer: 0
     }),
 

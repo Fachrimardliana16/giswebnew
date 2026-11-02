@@ -21,11 +21,16 @@ export const initMap = () => {
   const map = L.map('map', {
     center: MAP_CENTER,
     zoom: DEFAULT_ZOOM,
-    minZoom: 10,
+    minZoom: 9,
     maxZoom: 22,
     maxBounds: MAP_BOUNDS,
-    maxBoundsViscosity: 0.7,
-    zoomControl: false
+    // viscosity rendah: peta boleh sedikit melewati batas (karet),
+    // tapi tetap memantul balik. Sebelumnya 0.7 membuat pojok "mentok".
+    maxBoundsViscosity: 0.25,
+    zoomControl: false,
+    // izinkan scroll wheel & pinch zoom halus
+    wheelPxPerZoomLevel: 90,
+    zoomSnap: 0.5,
   });
 
   // Add zoom control at bottom-right

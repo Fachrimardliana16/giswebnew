@@ -77,10 +77,23 @@ export function initFeatureInfo(map, layers) {
                     
                     // Fallback to layer name if 'nama' is missing
                     const title = props.nama || props.NAMA || layerId.replace(/_/g, ' ').toUpperCase();
-                    const content = renderFeaturePopup(title, props, e.latlng.lat, e.latlng.lng);
+                    // pakai koordinat fitur bila ada (lebih akurat daripada titik klik)
+                    let flat = e.latlng.lat, flng = e.latlng.lng;
+                    if (feature.geometry && feature.geometry.coordinates) {
+                        if (feature.geometry.type === 'Point') {
+                            flng = feature.geometry.coordinates[0];
+                            flat = feature.geometry.coordinates[1];
+                        } else if (feature.geometry.type === 'LineString') {
+                            const c = feature.geometry.coordinates[Math.floor(feature.geometry.coordinates.length / 2)];
+                            flng = c[0]; flat = c[1];
+                        }
+                    }
+                    const content = renderFeaturePopup(title, props, flat, flng);
 
                     L.popup({
-                        maxWidth: 350,
+                        maxWidth: 340,
+                        minWidth: 300,
+                        autoPanPadding: [16, 16],
                         className: 'custom-gis-popup'
                     })
                     .setLatLng(e.latlng)

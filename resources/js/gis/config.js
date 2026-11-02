@@ -12,8 +12,8 @@ export const MAP_CENTER = [
 ];
 export const DEFAULT_ZOOM = parseInt(import.meta.env.VITE_MAP_ZOOM) || 11;
 export const MAP_BOUNDS = [
-  [-7.5, 109.2],   // Southwest
-  [-7.2, 109.5]    // Northeast
+  [-7.72, 109.02],   // Southwest — diperluas agar pojok wilayah terjangkau
+  [-7.10, 109.72]    // Northeast
 ];
 
 // Layer zoom level configurations
@@ -40,6 +40,24 @@ export const LAYER_ZOOM_LEVELS = {
 };
 
 /**
+ * Cache-busting berbasis ISI FILTER, bukan angka acak.
+ *
+ * Sebelumnya setiap setParams memakai Math.random(), sehingga URL tile
+ * selalu baru dan cache browser tidak pernah terpakai — setiap pan/zoom
+ * memaksa GeoServer menggambar ulang seluruh layar.
+ * Dengan hash filter, filter yang sama = URL sama = cache kena.
+ */
+const hashString = (str) => {
+    let h = 5381;
+    for (let i = 0; i < str.length; i++) {
+        h = ((h << 5) + h + str.charCodeAt(i)) | 0;
+    }
+    return (h >>> 0).toString(36);
+};
+
+export const versiFilter = (cql) => (cql ? hashString(String(cql)) : 'default');
+
+/**
  * Create a WMS layer with default and custom options
  * @param {string} name - Layer name
  * @param {Object} customOptions - Custom layer options
@@ -53,35 +71,24 @@ export const createWMSLayer = (name, customOptions = {}) => {
         layers: `webgis:${name}`,
         format: 'image/png',
         transparent: true,
+        // SELALU tiled: tile 256px jauh lebih ringan daripada satu gambar
+        // seukuran layar, dan hasilnya bisa di-cache per tile.
         tiled: true,
         zIndex: 400,
         maxZoom: zoomLevels.maxZoom,
         minZoom: zoomLevels.minZoom,
         crossOrigin: true,
         buffer: 0,
-        updateInterval: 200
+        // Jangan minta tile baru saat animasi zoom berjalan; tunggu berhenti.
+        // Ini memotong request berlipat saat pinch/wheel zoom.
+        updateWhenZooming: false,
+        // Jaga tile di sekitar viewport agar geser kecil tak memicu render ulang
+        keepBuffer: 3,
+        // Tunggu peta diam sebelum memuat (kurangi request beruntun)
+        updateWhenIdle: true,
+        // Jeda minimal antar permintaan tile saat pan cepat
+        updateInterval: 150,
     };
-
-    // Special handling for pipe layers
-    if (name === 'web_pipa' && customOptions.cql_filter) {
-        const isPipeSource = customOptions.cql_filter.includes('MA') || 
-                           customOptions.cql_filter.includes('Reservoar') || 
-                           customOptions.cql_filter.includes('CAKOT');
-        
-        if (isPipeSource) {
-            Object.assign(baseOptions, {
-                format: 'image/png',
-                transparent: true,
-                tiled: true,
-                opacity: 1.0,
-                zIndex: 999,
-                buffer: 0,
-                updateWhenIdle: false,
-                updateWhenZooming: false,
-                keepBuffer: 2
-            });
-        }
-    }
 
     const finalOptions = { ...baseOptions, ...customOptions };
     const layer = L.tileLayer.wms(GEOSERVER_URL, finalOptions);

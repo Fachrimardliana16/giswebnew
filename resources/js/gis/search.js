@@ -75,7 +75,9 @@ export function initSearch(map) {
                 const popupContent = renderFeaturePopup(props.nama || 'Informasi Pelanggan', props, latLng[0], latLng[1]);
                 
                 searchMarker.bindPopup(popupContent, {
-                    maxWidth: 320,
+                    maxWidth: 340,
+                    minWidth: 300,
+                    autoPanPadding: [16, 16],
                     className: 'custom-gis-popup'
                 }).openPopup();
 

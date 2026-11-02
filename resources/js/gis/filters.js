@@ -1,4 +1,5 @@
 import { formatRayonFilter } from './helpers.js';
+import { versiFilter } from './config.js';
 
 /**
  * Setup customer status filtering
@@ -94,11 +95,20 @@ export function setupStatusFilter(map, layers) {
       if (!map.hasLayer(layers.analisa_pelanggan)) {
         layers.analisa_pelanggan.addTo(map);
       }
-      
+
       const cqlFilter = buildCQLFilter();
+      const v = versiFilter(cqlFilter);
+
+      // Lewati setParams bila filter tidak berubah: mencegah Leaflet
+      // membuang semua tile dan memuat ulang tanpa alasan.
+      if (layers.analisa_pelanggan.wmsParams._v === v) {
+        return;
+      }
+
       layers.analisa_pelanggan.setParams({
         cql_filter: cqlFilter,
-        random: Math.random()
+        // hash filter, bukan angka acak: filter sama -> URL sama -> cache kena
+        _v: v
       });
     } else {
       if (map.hasLayer(layers.analisa_pelanggan)) {
@@ -201,12 +211,15 @@ export function setupPipaFilters(map, layers) {
       if (globalCQL) finalConditions.push(`(${globalCQL})`);
       
       const finalCQL = finalConditions.join(' AND ');
-      
-      layers.web_pipa.setParams({ 
-        cql_filter: finalCQL, 
-        random: Math.random(),
-        tiled: false // Force non-tiled for fresh data during debug
-      });
+      const v = versiFilter(finalCQL);
+
+      if (layers.web_pipa.wmsParams._v !== v) {
+        layers.web_pipa.setParams({
+          cql_filter: finalCQL,
+          _v: v,
+          tiled: true
+        });
+      }
       if (!map.hasLayer(layers.web_pipa)) layers.web_pipa.addTo(map);
     } else {
       // No filters selected at all, hide the layer
@@ -266,10 +279,13 @@ export function setupComplaintFilter(map, layers) {
 
     const cqlFilter = conditions.length > 0 ? conditions.join(' AND ') : '1=1';
 
-    layers.monitoring_pengaduan.setParams({
-      cql_filter: cqlFilter,
-      random: Math.random()
-    });
+    const vPengaduan = versiFilter(cqlFilter);
+    if (layers.monitoring_pengaduan.wmsParams._v !== vPengaduan) {
+      layers.monitoring_pengaduan.setParams({
+        cql_filter: cqlFilter,
+        _v: vPengaduan
+      });
+    }
     
     if (!map.hasLayer(layers.monitoring_pengaduan)) {
       layers.monitoring_pengaduan.addTo(map);
