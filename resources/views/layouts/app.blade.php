@@ -72,10 +72,10 @@
                 </div>
             </div>
             
-            <!-- Mobile Search Toggle -->
-            <button id="mobileSearchToggle" aria-label="Buka pencarian" aria-controls="mobileSearchContainer" class="hidden p-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all">
+            <!-- Mobile: ikon cari di header (menggantikan posisi profil lama) -->
+            <button id="mobileSearchToggle" aria-label="Buka pencarian" aria-controls="mobileHeaderSearch" aria-expanded="false" class="md:hidden p-2.5 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
             </button>
 
@@ -125,19 +125,27 @@
                 </div>
     @endauth
 
-    <!-- Mobile Search Bar (Expandable) -->
-    <div id="mobileSearchContainer" class="hidden bg-blue-700/95 backdrop-blur-md flex items-center px-4 z-40 transition-all duration-300">
-        <div class="relative w-full">
-            <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                <svg class="w-4 h-4 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+    <!-- Mobile Header Search: panel meluncur di bawah header, bukan di atas peta.
+         Default tertutup; dibuka dari ikon cari di header atau tab Cari. -->
+    <div id="mobileHeaderSearch" class="mobile-header-search md:hidden" data-open="0" aria-hidden="true">
+        <form class="mobile-header-search__form" id="mobileHeaderSearchForm" role="search">
+            <div class="mobile-header-search__field">
+                <svg width="18" height="18" fill="none" stroke="#94a3b8" viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
+                <input type="search" id="mobileFloatSearch" placeholder="Nama atau no. langganan"
+                       autocomplete="off" enterkeyhint="search" inputmode="search"
+                       aria-label="Cari pelanggan">
+                <button type="button" class="mobile-header-search__clear" id="mobileHeaderSearchClear"
+                        aria-label="Bersihkan pencarian">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
             </div>
-            <input type="text" id="mobileCustomerSearchInput" placeholder="Cari Pelanggan..." class="w-full bg-white/10 border border-white/20 text-white text-sm font-bold rounded-xl pl-11 pr-20 py-3 focus:bg-white focus:text-blue-900 outline-none transition-all placeholder:text-blue-200/60 shadow-inner">
-            <div class="absolute inset-y-0 right-0 flex items-center pr-1.5">
-                <button id="mobileSearchButton" class="bg-white text-blue-700 px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-50 active:scale-95 transition-all shadow-md shadow-blue-900/20">Cari</button>
-            </div>
-        </div>
+            <button type="submit" class="mobile-header-search__btn" id="mobileFloatSearchBtn">Cari</button>
+        </form>
     </div>
 
     <div class="flex-1 flex overflow-hidden min-h-0 relative">

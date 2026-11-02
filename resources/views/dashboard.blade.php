@@ -11,20 +11,6 @@
     <div class="flex-1 relative overflow-hidden group">
         <div id="map" class="absolute inset-0"></div>
 
-        {{-- Search melayang (mobile): menggantikan search bar header --}}
-        <div class="mobile-search-float">
-            <div class="mobile-search-float__field">
-                <svg width="18" height="18" fill="none" stroke="#94a3b8" viewBox="0 0 24 24" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-                <input type="search" id="mobileFloatSearch" placeholder="Cari nama / no. langganan"
-                       autocomplete="off" enterkeyhint="search" inputmode="search"
-                       aria-label="Cari pelanggan">
-                <button type="button" class="mobile-search-float__btn" id="mobileFloatSearchBtn">Cari</button>
-            </div>
-        </div>
-
         {{-- Kontrol peta desktop. Tombol basemap dipindah ke sheet "Tampilan Peta"
              (dibuka dari FAB di mobile / tombol di desktop). --}}
         <div class="absolute top-6 right-6 z-30 hidden md:flex flex-col gap-3">

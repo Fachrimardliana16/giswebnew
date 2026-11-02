@@ -1,6 +1,5 @@
 /**
- * Mobile app shell: bottom navigation, bottom sheet, FAB, basemap sheet.
- *
+ * Mobile app shell: bottom navigation, bottom sheet, FAB, search di header.
  * Hanya aktif di <=767px. Desktop tidak terpengaruh.
  */
 
@@ -11,10 +10,6 @@ const isMobile = () => window.matchMedia(MQ).matches;
 const getSheet = () => document.querySelector(SHEET_SELECTOR);
 const getBackdrop = () => document.querySelector('[data-sheet-backdrop]');
 
-/**
- * Tab Peta/Pelanggan/Pipa/Cari/Akun.
- * modeSheet: 'pelanggan' | 'pipa' | null
- */
 function setTabAktif(nama) {
     document.querySelectorAll('[data-nav]').forEach(btn => {
         btn.setAttribute('aria-selected', btn.dataset.nav === nama ? 'true' : 'false');
@@ -23,37 +18,42 @@ function setTabAktif(nama) {
 
 /* ---------------- Filter isi sheet per tab ---------------- */
 
-/**
- * Tampilkan hanya bagian yang relevan di dalam sheet.
- * Section sidebar punya id: pelanggan, jaringan_pipa, aksesoris, jaringan.
- */
 function terapkanFilterSheet(mode) {
     const sheet = getSheet();
     if (!sheet) return;
 
     const map = {
-        pelanggan: ['pelanggan', 'jaringan'],       // data pelanggan + pengaduan
-        pipa: ['jaringan_pipa', 'aksesoris'],       // pipa + asesoris
+        pelanggan: ['pelanggan', 'jaringan'],
+        pipa: ['jaringan_pipa', 'aksesoris'],
     };
-
     const tampil = map[mode] || null;
 
     sheet.querySelectorAll('[data-section-toggle]').forEach(header => {
         const id = header.dataset.sectionToggle;
-        const wrapper = header.parentElement;   // .space-y-1.mb-1 (pembungkus section)
+        // pembungkus section = parent dari header
+        const wrapper = header.parentElement;
         if (!wrapper) return;
-
-        if (!tampil) {
-            wrapper.style.display = '';
-            return;
-        }
-        wrapper.style.display = tampil.includes(id) ? '' : 'none';
+        wrapper.style.display = (!tampil || tampil.includes(id)) ? '' : 'none';
     });
 
-    // Sembunyikan blok navigasi admin di sheet saat mode filter aktif
+    // Buka otomatis section yang relevan: kalau dibiarkan tertutup,
+    // sheet tampak kosong meski sudah difilter.
+    if (tampil) {
+        tampil.forEach(id => {
+            const content = document.getElementById('content-' + id);
+            const icon = document.getElementById('icon-' + id);
+            const header = sheet.querySelector(`[data-section-toggle="${id}"]`);
+            if (content && content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                if (icon) icon.classList.add('rotate-180');
+                if (header) header.setAttribute('aria-expanded', 'true');
+            }
+        });
+    }
+
+    // Sembunyikan blok navigasi admin saat mode filter aktif
     const navAdmin = sheet.querySelector('.px-2.mb-6');
-    if (navAdmin && tampil) navAdmin.style.display = 'none';
-    else if (navAdmin) navAdmin.style.display = '';
+    if (navAdmin) navAdmin.style.display = tampil ? 'none' : '';
 }
 
 function resetFilterSheet() {
@@ -92,10 +92,7 @@ export function bukaSheet(mode = null) {
 
     const fokusable = sheet.querySelector('input:not([type=hidden]), select');
     if (fokusable) {
-        // Tunggu transisi sheet selesai (320ms) sebelum fokus
-        setTimeout(() => {
-            fokusable.focus({ preventScroll: true });
-        }, 340);
+        setTimeout(() => fokusable.focus({ preventScroll: true }), 340);
     }
 }
 
@@ -109,7 +106,6 @@ export function tutupSheet() {
     if (backdrop) backdrop.dataset.open = '0';
     document.body.style.overflow = '';
     resetFilterSheet();
-    setTabAktif('peta');
 }
 
 export function toggleSheet(mode) {
@@ -119,7 +115,6 @@ export function toggleSheet(mode) {
     else bukaSheet(mode);
 }
 
-/** Drag untuk menutup sheet */
 function pasangDrag() {
     const sheet = getSheet();
     const handle = document.querySelector('[data-sheet-handle]');
@@ -163,45 +158,65 @@ function pasangDrag() {
     });
 }
 
-/* ---------------- Basemap sheet ---------------- */
+/* ---------------- Basemap: toggle langsung ---------------- */
 
-function basemapSheet() {
-    const el = () => document.querySelector('[data-basemap-sheet]');
-    const tutup = () => {
-        const s = el();
-        if (s) {
-            s.dataset.open = '0';
-            s.setAttribute('aria-hidden', 'true');
-        }
-    };
+/**
+ * State basemap disimpan di #baseMapLabel (dipakai map.js):
+ * label 'Satelit' = sedang Peta Jalan (klik berikutnya -> satelit).
+ */
+function segarkanStateBasemap() {
+    const label = document.getElementById('baseMapLabel');
+    if (!label) return;
+    const sedangOsm = label.textContent.trim() === 'Satelit';
+    document.body.dataset.basemap = sedangOsm ? 'osm' : 'satelit';
+}
 
-    document.querySelectorAll('[data-basemap-fab], [data-basemap-fab-desktop]').forEach(btn => {
+function siapkanBasemap() {
+    // Tombol FAB: satu klik langsung menukar peta
+    document.querySelectorAll('[data-basemap-toggle]').forEach(btn => {
         btn.addEventListener('click', () => {
-            const s = el();
+            document.getElementById('baseMapToggle')?.click();
+            // map.js memperbarui label secara sinkron, tapi beri jeda 1 frame
+            requestAnimationFrame(() => {
+                segarkanStateBasemap();
+                const sekarang = document.body.dataset.basemap === 'satelit' ? 'Satelit' : 'Peta Jalan';
+                window.showToast?.('Tampilan: ' + sekarang, 'info', 1600);
+            });
+        });
+    });
+
+    // Tombol desktop membuka sheet pilihan (perilaku lama dipertahankan)
+    document.querySelectorAll('[data-basemap-fab-desktop]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const s = document.querySelector('[data-basemap-sheet]');
             if (!s) return;
             s.dataset.open = '1';
             s.removeAttribute('aria-hidden');
         });
     });
 
-    document.querySelectorAll('[data-basemap-tutup]').forEach(b => b.addEventListener('click', tutup));
+    const tutupSheetBasemap = () => {
+        const s = document.querySelector('[data-basemap-sheet]');
+        if (s) {
+            s.dataset.open = '0';
+            s.setAttribute('aria-hidden', 'true');
+        }
+    };
+    document.querySelectorAll('[data-basemap-tutup]').forEach(b => b.addEventListener('click', tutupSheetBasemap));
 
-    const s = el();
+    const s = document.querySelector('[data-basemap-sheet]');
     if (s) {
         s.addEventListener('click', (e) => {
-            // klik panel jangan menutup
             if (e.target.closest('.basemap-sheet__panel')) return;
-            tutup();
+            tutupSheetBasemap();
         });
     }
 
+    // Opsi di dalam sheet (desktop)
     document.querySelectorAll('[data-basemap]').forEach(opt => {
         opt.addEventListener('click', () => {
-            const target = opt.dataset.basemap;               // 'osm' | 'satelit'
-            const label = document.getElementById('baseMapLabel');
-            const sekarang = (label?.textContent || '').trim();
-            // label berisi tujuan berikutnya: 'Satelit' berarti sedang OSM
-            const sedangOsm = sekarang === 'Satelit';
+            const target = opt.dataset.basemap;
+            const sedangOsm = document.body.dataset.basemap !== 'satelit';
 
             if ((target === 'satelit' && sedangOsm) || (target === 'osm' && !sedangOsm)) {
                 document.getElementById('baseMapToggle')?.click();
@@ -211,25 +226,31 @@ function basemapSheet() {
                 o.setAttribute('aria-checked', o.dataset.basemap === target ? 'true' : 'false');
             });
 
-            setTimeout(tutup, 180);
+            requestAnimationFrame(segarkanStateBasemap);
+            setTimeout(tutupSheetBasemap, 180);
         });
     });
+
+    segarkanStateBasemap();
 }
 
-/* ---------------- Search melayang (default hidden) ---------------- */
+/* ---------------- Search di header (default tertutup) ---------------- */
 
-function searchFloat() {
-    const wrap = document.querySelector('.mobile-search-float');
+function searchHeader() {
+    const panel = document.getElementById('mobileHeaderSearch');
     const input = document.getElementById('mobileFloatSearch');
-    const btn = document.getElementById('mobileFloatSearchBtn');
+    const clear = document.getElementById('mobileHeaderSearchClear');
+    const form = document.getElementById('mobileHeaderSearchForm');
+    const toggle = document.getElementById('mobileSearchToggle');
     const asli = document.getElementById('customerSearchInput');
     const asliBtn = document.getElementById('searchButton');
-    if (!wrap || !input || !asli || !asliBtn) return;
+    if (!panel || !input || !asli || !asliBtn) return;
 
     const buka = () => {
-        wrap.dataset.active = '1';
-        // Fokus setelah transisi selesai; requestAnimationFrame lebih andal
-        // daripada setTimeout saat elemen baru berubah dari display:none.
+        panel.dataset.open = '1';
+        panel.removeAttribute('aria-hidden');
+        toggle?.setAttribute('aria-expanded', 'true');
+        document.body.classList.add('fab-turun');
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
                 input.focus();
@@ -237,11 +258,50 @@ function searchFloat() {
             });
         });
     };
+
     const tutup = () => {
-        wrap.dataset.active = '0';
+        panel.dataset.open = '0';
+        panel.setAttribute('aria-hidden', 'true');
+        toggle?.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('fab-turun');
         input.blur();
     };
 
+    const tutupKalauKosong = () => {
+        if (!input.value.trim()) tutup();
+    };
+
+    toggle?.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (panel.dataset.open === '1') tutup();
+        else { tutupSheet(); buka(); }
+    });
+
+    clear?.addEventListener('click', () => {
+        input.value = '';
+        input.focus();
+    });
+
+    const jalankan = () => {
+        const q = input.value.trim();
+        if (!q) { tutup(); return; }
+        asli.value = q;
+        asliBtn.click();
+        tutup();
+        setTabAktif('peta');
+    };
+
+    form?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        jalankan();
+    });
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') tutup();
+        if (e.key === 'Enter') { e.preventDefault(); jalankan(); }
+    });
+
+    // Tab Cari di bottom nav juga membuka panel yang sama
     document.querySelectorAll('[data-search-open]').forEach(b => {
         b.addEventListener('click', (e) => {
             e.preventDefault();
@@ -251,26 +311,10 @@ function searchFloat() {
         });
     });
 
-    const jalankan = () => {
-        const q = input.value.trim();
-        if (!q) return;
-        asli.value = q;
-        asliBtn.click();
-        tutup();
-        setTabAktif('peta');
-    };
+    // Klik peta menutup panel bila kosong
+    document.getElementById('map')?.addEventListener('click', tutupKalauKosong);
 
-    if (btn) btn.addEventListener('click', jalankan);
-    input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); jalankan(); }
-        if (e.key === 'Escape') tutup();
-    });
-
-    // Klik di peta menutup kolom cari
-    const mapEl = document.getElementById('map');
-    if (mapEl) mapEl.addEventListener('click', () => {
-        if (wrap.dataset.active === '1') { tutup(); setTabAktif('peta'); }
-    });
+    return { buka, tutup };
 }
 
 /* ---------------- Badge per kategori ---------------- */
@@ -312,7 +356,6 @@ function pantauBadge() {
 /* ---------------- Inisialisasi ---------------- */
 
 export function initMobileApp() {
-    // Tab yang membuka sheet (dengan mode filter)
     document.querySelectorAll('[data-sheet-open]').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -320,6 +363,7 @@ export function initMobileApp() {
             const sheet = getSheet();
             if (sheet?.dataset.open === '1' && sheet.dataset.mode === (mode || '')) {
                 tutupSheet();
+                setTabAktif('peta');
             } else {
                 bukaSheet(mode);
                 setTabAktif(btn.dataset.nav);
@@ -327,7 +371,6 @@ export function initMobileApp() {
         });
     });
 
-    // Tab Peta / tutup sheet
     document.querySelectorAll('[data-sheet-close]').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -335,6 +378,7 @@ export function initMobileApp() {
             setTabAktif('peta');
         });
     });
+
     document.querySelectorAll('[data-nav="peta"]').forEach(btn => {
         btn.addEventListener('click', () => {
             tutupSheet();
@@ -342,7 +386,7 @@ export function initMobileApp() {
         });
     });
 
-    // Tab Akun -> tutup sheet + buka profil (bottom sheet)
+    // Tab Akun -> profil bottom sheet
     document.querySelectorAll('[data-profile-open]').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -357,11 +401,16 @@ export function initMobileApp() {
     });
 
     const backdrop = getBackdrop();
-    if (backdrop) backdrop.addEventListener('click', tutupSheet);
+    if (backdrop) backdrop.addEventListener('click', () => {
+        tutupSheet();
+        setTabAktif('peta');
+    });
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             tutupSheet();
+            const panel = document.getElementById('mobileHeaderSearch');
+            if (panel) panel.dataset.open = '0';
             const bs = document.querySelector('[data-basemap-sheet]');
             if (bs) bs.dataset.open = '0';
         }
@@ -380,14 +429,16 @@ export function initMobileApp() {
             const bd = getBackdrop();
             if (bd) bd.dataset.open = '0';
             document.body.style.overflow = '';
+            const panel = document.getElementById('mobileHeaderSearch');
+            if (panel) panel.dataset.open = '0';
         }
     };
     mq.addEventListener('change', sesuaikan);
     sesuaikan();
 
     pasangDrag();
-    basemapSheet();
-    searchFloat();
+    siapkanBasemap();
+    searchHeader();
     pantauBadge();
 }
 

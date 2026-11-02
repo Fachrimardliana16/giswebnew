@@ -54,13 +54,18 @@
 {{-- Backdrop bottom sheet --}}
 <div class="sheet-backdrop" data-sheet-backdrop data-sheet-close aria-hidden="true"></div>
 
-{{-- FAB: aksi cepat, diletakkan di ATAS agar tidak menutupi zoom Leaflet --}}
+{{-- FAB: aksi cepat, di ATAS agar tidak menutupi zoom Leaflet.
+     Tombol peta = toggle langsung Peta Jalan <-> Satelit. --}}
 <div class="mobile-fab" data-fab>
-    <button type="button" class="mobile-fab__btn" data-basemap-fab
-            aria-label="Pilih tampilan peta" title="Tampilan peta">
-        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+    <button type="button" class="mobile-fab__btn" data-basemap-toggle
+            aria-label="Ganti antara peta jalan dan satelit" title="Ganti peta">
+        <svg class="mobile-fab__icon mobile-fab__icon--peta" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round"
                   d="M9 20l-5.447-2.724A2 2 0 013 15.382V5.618a2 2 0 011.447-1.894L9 1m0 19l6-3m-6 3V1m6 16l5.447 2.724A2 2 0 0021 17.882V8.118a2 2 0 00-1.447-1.894L15 4m0 13V4m0 0L9 1"></path>
+        </svg>
+        <svg class="mobile-fab__icon mobile-fab__icon--satelit" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
     </button>
     <button type="button" class="mobile-fab__btn mobile-fab__btn--primary" data-location-fab

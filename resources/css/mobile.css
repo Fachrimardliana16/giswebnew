@@ -204,78 +204,141 @@
     border-color: rgba(37, 99, 235, 0.4);
 }
 
-/* ---------- Search bar melayang ----------
-   Default HIDDEN. Muncul hanya saat tab "Cari" ditekan,
-   atau setelah tombol Cari diklik. */
-.mobile-search-float {
-    position: absolute;
-    top: 10px;
-    left: 12px;
-    right: 12px;
-    z-index: 45;
+/* ---------- Search di header (panel meluncur, bukan overlay peta) ----------
+   Default tertutup. Dibuka dari ikon cari di header atau tab Cari. */
+.mobile-header-search {
     display: none;
-    opacity: 0;
-    transform: translateY(-8px);
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    pointer-events: none;
+    background: #1d4ed8;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+    padding: 0 12px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.24s cubic-bezier(0.32, 0.72, 0, 1), padding 0.24s ease;
+    position: relative;
+    z-index: 55;
 }
 
 @media (max-width: 767px) {
-    .mobile-search-float[data-active="1"] {
+    .mobile-header-search {
         display: block;
-        opacity: 1;
-        transform: translateY(0);
-        pointer-events: auto;
+    }
+
+    .mobile-header-search[data-open="1"] {
+        max-height: 78px;
+        padding: 10px 12px 12px;
     }
 }
 
-.mobile-search-float__field {
+.mobile-header-search__form {
     display: flex;
     align-items: center;
     gap: 8px;
-    height: 46px;
-    padding: 0 8px 0 14px;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    border: 1px solid rgba(15, 23, 42, 0.08);
-    box-shadow: 0 8px 28px -10px rgba(15, 23, 42, 0.3);
 }
 
-.mobile-search-float__field input {
+.mobile-header-search__field {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 8px 0 12px;
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.96);
+}
+
+.mobile-header-search__field input {
     flex: 1;
     min-width: 0;
     border: 0;
     outline: 0;
     background: none;
-    font-size: 14px;
+    font-size: 16px;              /* cegah auto-zoom iOS */
     font-weight: 700;
     color: #0f172a;
 }
 
-.mobile-search-float__field input::placeholder {
+.mobile-header-search__field input::placeholder {
     color: #94a3b8;
     font-weight: 600;
 }
 
-.mobile-search-float__btn {
+.mobile-header-search__clear {
     flex: 0 0 auto;
-    height: 34px;
-    padding: 0 14px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border: 0;
-    border-radius: 10px;
-    background: #2563eb;
+    border-radius: 8px;
+    background: #e2e8f0;
+    color: #64748b;
+}
+
+.mobile-header-search__btn {
+    flex: 0 0 auto;
+    height: 44px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 13px;
+    background: #0f172a;
     color: #fff;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 0.06em;
 }
 
-.mobile-search-float__btn:active {
-    transform: scale(0.95);
+/* Ikon FAB: tampilkan sesuai basemap aktif */
+.mobile-fab__btn[data-basemap-toggle] {
+    position: relative;
 }
+
+.mobile-fab__icon {
+    width: 22px;
+    height: 22px;
+    display: none;
+}
+
+/* label state disimpan di #baseMapLabel: 'Satelit' = sedang peta jalan */
+body[data-basemap="osm"] .mobile-fab__icon--peta,
+body:not([data-basemap]) .mobile-fab__icon--peta {
+    display: block;
+}
+
+body[data-basemap="satelit"] .mobile-fab__icon--satelit {
+    display: block;
+}
+
+body[data-basemap="satelit"] .mobile-fab__icon--peta {
+    display: none;
+}
+
+/* Fallback kelas untuk browser tanpa :has() */
+body.fab-turun .mobile-fab {
+    top: calc(var(--mobile-header-h) + 88px + var(--safe-top));
+}
+
+body[data-basemap="satelit"] .mobile-fab__icon--peta {
+    display: none;
+}
+
+/* FAB bergeser turun saat panel search header terbuka,
+   supaya tidak menutupi kolom pencarian. */
+body:has(.mobile-header-search[data-open="1"]) .mobile-fab {
+    top: calc(var(--mobile-header-h) + 88px + var(--safe-top));
+    transition: top 0.24s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.mobile-fab {
+    transition: top 0.24s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+
+
+
+
 
 /* ---------- Bottom sheet (sidebar versi mobile) ---------- */
 @media (max-width: 767px) {
@@ -350,6 +413,139 @@
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+        padding-top: 4px !important;
+        padding-bottom: calc(20px + var(--safe-bottom)) !important;
+    }
+
+    /* Proporsi isi sheet: judul, jarak, dan kontrol diringkas */
+    .sidebar-sheet .sidebar-section-header {
+        padding: 12px 12px !important;
+        border-radius: 14px !important;
+        margin-bottom: 2px;
+    }
+
+    .sidebar-sheet .sidebar-section-header h3 {
+        font-size: 11px !important;
+        letter-spacing: 0.16em !important;
+    }
+
+    /* Jarak antar kontrol di dalam section */
+    .sidebar-sheet #content-pelanggan,
+    .sidebar-sheet #content-jaringan_pipa,
+    .sidebar-sheet #content-aksesoris,
+    .sidebar-sheet #content-jaringan {
+        padding: 8px 4px 12px !important;
+    }
+
+    /* Baris checkbox layer: rapat tapi tetap 44px target sentuh */
+    .sidebar-sheet .layer-checkbox,
+    .sidebar-sheet .pipa-checkbox,
+    .sidebar-sheet .pipa-sumberma-checkbox,
+    .sidebar-sheet .aksesoris-checkbox,
+    .sidebar-sheet .pelanggan-checkbox,
+    .sidebar-sheet .pengduan-checkbox {
+        width: 20px !important;
+        height: 20px !important;
+        min-height: 20px !important;
+        border-radius: 6px !important;
+    }
+
+    /* Baris checkbox layer di sheet: rapat, tetap nyaman disentuh.
+       Spesifisitas dinaikkan agar menang atas aturan min-height global. */
+    @media (max-width: 767px) {
+        .sidebar-sheet .layer-control div.group,
+        .sidebar-sheet .layer-control > div > div.group {
+            padding: 0 8px !important;
+            height: 44px !important;
+            min-height: 44px !important;
+            max-height: 44px !important;
+            gap: 10px !important;
+            border-radius: 10px !important;
+            align-items: center !important;
+            box-sizing: border-box !important;
+            display: flex !important;
+        }
+
+        .sidebar-sheet .layer-control div.group label {
+            font-size: 11.5px !important;
+            line-height: 1.1 !important;
+            min-height: 0 !important;
+            padding: 0 !important;
+            display: block !important;
+        }
+
+        .sidebar-sheet .layer-control div.group input[type="checkbox"] {
+            width: 18px !important;
+            height: 18px !important;
+            min-height: 18px !important;
+            min-width: 18px !important;
+            flex: 0 0 auto;
+        }
+    }
+
+    /* Wrapper .space-y-3 di dalam section daftar layer */
+    .sidebar-sheet .layer-control > div.space-y-3 > * + * {
+        margin-top: 0 !important;
+    }
+
+    .sidebar-sheet .layer-control > div.group label {
+        font-size: 12px !important;
+        line-height: 1.2 !important;
+        min-height: 0 !important;
+    }
+
+    /* Grup filter: rapatkan tanpa mengorbankan keterbacaan */
+    .sidebar-sheet .space-y-5 > * + * { margin-top: 12px !important; }
+    .sidebar-sheet .space-y-4 > * + * { margin-top: 10px !important; }
+    .sidebar-sheet .space-y-6 > div + div { margin-top: 14px !important; }
+    .sidebar-sheet .space-y-2 > * + * { margin-top: 8px !important; }
+
+    /* Select filter & input pencarian dalam sheet */
+    .sidebar-sheet select {
+        padding: 12px 12px !important;
+        font-size: 14px !important;
+        border-radius: 12px !important;
+        min-height: 46px !important;
+    }
+
+    .sidebar-sheet input[type="text"] {
+        padding: 12px 14px !important;
+        border-radius: 12px !important;
+        min-height: 46px !important;
+    }
+
+    /* Grid diameter pipa: 2 kolom lebih lega */
+    .sidebar-sheet .grid.grid-cols-2 {
+        column-gap: 10px !important;
+        row-gap: 4px !important;
+        padding: 0 4px !important;
+    }
+
+    /* Label kecil (JUDUL SUB-GRUP) */
+    .sidebar-sheet p.text-\[9px\],
+    .sidebar-sheet p.text-\[8px\] {
+        margin-bottom: 8px !important;
+        opacity: 0.85;
+    }
+
+    /* Tombol pilih semua / hapus semua */
+    .sidebar-sheet .flex.gap-2 > button {
+        min-height: 40px !important;
+        font-size: 10px !important;
+        border-radius: 11px !important;
+    }
+
+    /* Gagang sheet: lebih ringkas */
+    .sidebar-sheet__handle {
+        padding: 8px 0 4px !important;
+    }
+
+    .sidebar-sheet__handle-label {
+        font-size: 9px !important;
+        letter-spacing: 0.18em !important;
+        color: #a3aec0;
     }
 }
 
