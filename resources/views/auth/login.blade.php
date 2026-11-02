@@ -110,7 +110,6 @@
                             </div>
                             <span class="ml-2.5 text-xs font-bold text-slate-500 group-hover:text-slate-800 transition-colors">Ingat saya</span>
                         </label>
-                        <a href="#" class="text-[10px] uppercase font-black tracking-widest text-blue-600 hover:text-blue-700 transition-colors">Lupa Password?</a>
                     </div>
 
                     <button type="submit" 

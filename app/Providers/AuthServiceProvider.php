@@ -2,16 +2,16 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Auth;
 use App\Auth\PgsqlUserProvider;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
 {
     public function boot()
     {
         Auth::provider('pgsql', function ($app, array $config) {
-            return new PgsqlUserProvider();
+            return new PgsqlUserProvider;
         });
     }
 }

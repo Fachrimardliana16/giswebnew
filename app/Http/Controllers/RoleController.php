@@ -13,15 +13,16 @@ class RoleController extends Controller
         $sortBy = $request->get('sort', 'name');
         $order = $request->get('order', 'asc');
 
-        if (!in_array($sortBy, ['name', 'created_at'])) {
+        if (! in_array($sortBy, ['name', 'created_at'])) {
             $sortBy = 'name';
         }
 
-        if (!in_array($order, ['asc', 'desc'])) {
+        if (! in_array($order, ['asc', 'desc'])) {
             $order = 'asc';
         }
 
         $roles = Role::withCount('users')->orderBy($sortBy, $order)->get();
+
         return view('dashboard.roles.index', compact('roles'));
     }
 
@@ -56,6 +57,7 @@ class RoleController extends Controller
         }
 
         $role->delete();
+
         return back()->with('success', 'Role berhasil dihapus.');
     }
 

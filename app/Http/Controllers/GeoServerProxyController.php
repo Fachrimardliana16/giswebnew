@@ -29,7 +29,9 @@ class GeoServerProxyController extends Controller
     ];
 
     private const MAX_FEATURES = 50;
+
     private const MAX_DIMENSION = 4096;
+
     private const MAX_CQL_LENGTH = 1000;
 
     /**
@@ -136,6 +138,14 @@ class GeoServerProxyController extends Controller
     {
         $requested = (int) ($params['maxfeatures'] ?? self::MAX_FEATURES);
         $params['maxfeatures'] = max(1, min($requested, self::MAX_FEATURES));
+
+        // klien hanya boleh minta format data yang aman (cegah JSONP/script injection)
+        if (isset($params['outputformat'])) {
+            $allowedFormats = ['application/json', 'application/json;charset=utf-8', 'gml2', 'gml3'];
+            if (! in_array(strtolower($params['outputformat']), $allowedFormats, true)) {
+                $params['outputformat'] = 'application/json';
+            }
+        }
 
         // klien boleh minta subset, tapi tidak boleh minta kolom di luar whitelist
         if (isset($params['propertyname'])) {
