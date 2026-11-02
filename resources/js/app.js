@@ -10,6 +10,7 @@ import { showToast } from './gis/toast.js';
 import { initLoadingWatchdog } from './gis/loadingWatchdog.js';
 import { initMobileApp } from './gis/mobileApp.js';
 import { initSearchSuggest } from './gis/searchSuggest.js';
+import { initPwa } from './gis/pwa.js';
 
 /**
  * Initialize the application when DOM is ready.
@@ -19,6 +20,9 @@ import { initSearchSuggest } from './gis/searchSuggest.js';
  */
 async function boot() {
     console.log('GIS App Initializing...');
+
+    // PWA: daftarkan service worker & pantau status offline
+    initPwa();
 
     // Initialize UI Toggles immediately for best responsiveness
     initMobileToggle();

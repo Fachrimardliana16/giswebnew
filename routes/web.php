@@ -15,6 +15,38 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// Service worker: no-cache wajib, kalau tidak versi baru tidak akan terpakai.
+// Lihat komentar di dalam closure.
+Route::get('/sw.js', function () {
+    // File berada di resources/sw, BUKAN public/, supaya web server tidak
+    // menyajikannya sebagai file statis tanpa header no-cache.
+    $path = resource_path('sw/sw.js');
+
+    if (! file_exists($path)) {
+        abort(404);
+    }
+
+    return response(file_get_contents($path), 200, [
+        'Content-Type' => 'application/javascript; charset=utf-8',
+        'Cache-Control' => 'no-cache, no-store, must-revalidate',
+        'Service-Worker-Allowed' => '/',
+    ]);
+})->name('service-worker');
+
+// Manifest PWA juga tidak perlu di-cache lama.
+Route::get('/manifest.webmanifest', function () {
+    $path = public_path('manifest.webmanifest');
+
+    if (! file_exists($path)) {
+        abort(404);
+    }
+
+    return response(file_get_contents($path), 200, [
+        'Content-Type' => 'application/manifest+json; charset=utf-8',
+        'Cache-Control' => 'public, max-age=3600',
+    ]);
+})->name('manifest');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [MapController::class, 'index'])->name('dashboard');
     Route::get('/geo-proxy', [GeoServerProxyController::class, 'proxy'])->name('geo.proxy');

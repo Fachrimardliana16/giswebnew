@@ -1,0 +1,178 @@
+/**
+ * Service worker WebGIS Tirta Perwira.
+ *
+ * Strategi per jenis permintaan:
+ *  - Aset build (JS/CSS berhash)  -> cache-first, permanen (nama file berubah
+ *                                    tiap build, jadi aman)
+ *  - Tile WMS (GetMap)            -> cache-first dengan batas jumlah, plus
+ *                                    jaringan sebagai cadangan. Tile peta
+ *                                    statis per (layer, bbox, zoom, filter),
+ *                                    jadi aman di-cache.
+ *  - Tile basemap (OSM/Google)    -> cache-first, dibatasi
+ *  - Halaman HTML                 -> network-first, fallback ke cache
+ *  - /geo-proxy selain GetMap     -> network-only (data harus segar)
+ *  - POST/PUT/DELETE              -> tidak disentuh
+ *
+ * PENTING: naikkan VERSI setiap kali mengubah logika cache. Tanpa itu,
+ * browser memakai SW lama dan perubahan tidak pernah sampai ke pengguna.
+ */
+
+const VERSI = 'v1-2026-11-02';
+const CACHE_ASET = `webgis-aset-${VERSI}`;
+const CACHE_TILE = `webgis-tile-${VERSI}`;
+const CACHE_HALAMAN = `webgis-halaman-${VERSI}`;
+const CACHE_LAIN = `webgis-lain-${VERSI}`;
+
+const BATAS_TILE = 400;   // jumlah tile maksimum yang disimpan
+const BATAS_LAIN = 60;
+
+/** Aset inti yang diambil saat install (app shell). */
+const ASET_INTI = [
+    '/login',
+];
+
+self.addEventListener('install', (event) => {
+    event.waitUntil((async () => {
+        const cache = await caches.open(CACHE_ASET);
+        // jangan gagal total kalau satu aset tidak tersedia
+        await Promise.allSettled(ASET_INTI.map(u => cache.add(u)));
+        self.skipWaiting();
+    })());
+});
+
+self.addEventListener('activate', (event) => {
+    event.waitUntil((async () => {
+        // hapus cache versi lama
+        const nama = await caches.keys();
+        await Promise.all(
+            nama
+                .filter(n => n.startsWith('webgis-') && !n.endsWith(VERSI))
+                .map(n => caches.delete(n))
+        );
+        await self.clients.claim();
+    })());
+});
+
+/** Batasi jumlah entri cache (LRU sederhana berbasis waktu masuk). */
+async function batasiCache(namaCache, batas) {
+    const cache = await caches.open(namaCache);
+    const kunci = await cache.keys();
+    if (kunci.length <= batas) return;
+
+    // buang yang paling lama
+    const lebih = kunci.length - batas;
+    for (let i = 0; i < lebih; i++) {
+        await cache.delete(kunci[i]);
+    }
+}
+
+/** Cache-first + simpan ke cache. */
+async function cacheDulu(request, namaCache, batas) {
+    const cache = await caches.open(namaCache);
+    const tersimpan = await cache.match(request);
+    if (tersimpan) return tersimpan;
+
+    try {
+        const res = await fetch(request);
+        // hanya simpan respons sah (hindari menyimpan error GeoServer)
+        if (res && res.ok && res.status === 200) {
+            const tipe = res.headers.get('content-type') || '';
+            const bolehSimpan = /image\//.test(tipe) || /javascript|css|font|json/.test(tipe);
+            if (bolehSimpan) {
+                await cache.put(request, res.clone());
+                if (batas) batasiCache(namaCache, batas);
+            }
+        }
+        return res;
+    } catch (e) {
+        // offline: coba apa pun yang ada
+        const cadangan = await cache.match(request);
+        if (cadangan) return cadangan;
+        throw e;
+    }
+}
+
+/** Network-first dengan fallback cache (untuk HTML). */
+async function jaringanDulu(request) {
+    const cache = await caches.open(CACHE_HALAMAN);
+    try {
+        const res = await fetch(request);
+        if (res && res.ok) {
+            await cache.put(request, res.clone());
+        }
+        return res;
+    } catch (e) {
+        const tersimpan = await cache.match(request);
+        if (tersimpan) return tersimpan;
+
+        // fallback terakhir: halaman login (shell)
+        const shell = await caches.match('/login');
+        if (shell) return shell;
+        throw e;
+    }
+}
+
+self.addEventListener('fetch', (event) => {
+    const { request } = event;
+
+    // hanya GET
+    if (request.method !== 'GET') return;
+
+    const url = new URL(request.url);
+
+    // ---------- 1. Tile WMS lewat proxy ----------
+    if (url.pathname === '/geo-proxy') {
+        const req = (url.searchParams.get('request')
+            || url.searchParams.get('REQUEST')
+            || '').toUpperCase();
+
+        if (req === 'GETMAP' || req === 'GETLEGENDGRAPHIC') {
+            event.respondWith(cacheDulu(request, CACHE_TILE, BATAS_TILE));
+            return;
+        }
+
+        // GetFeatureInfo / GetFeature / GetCapabilities: harus segar
+        return;
+    }
+
+    // ---------- 2. Tile basemap eksternal ----------
+    if (/tile\.openstreetmap\.org|mt\d\.google\.com/.test(url.hostname)) {
+        event.respondWith(cacheDulu(request, CACHE_TILE, BATAS_TILE));
+        return;
+    }
+
+    // ---------- 3. Aset build (berhash, aman permanen) ----------
+    if (url.origin === self.location.origin && url.pathname.startsWith('/build/')) {
+        event.respondWith(cacheDulu(request, CACHE_ASET));
+        return;
+    }
+
+    // ---------- 4. Navigasi halaman ----------
+    if (request.mode === 'navigate') {
+        event.respondWith(jaringanDulu(request));
+        return;
+    }
+
+    // ---------- 5. Aset statis lain (font, css CDN) ----------
+    if (/cdnjs|fonts\.googleapis|fonts\.gstatic|cdn-icons-png|unpkg/.test(url.host)) {
+        event.respondWith(cacheDulu(request, CACHE_LAIN, BATAS_LAIN));
+        return;
+    }
+});
+
+/** Terima perintah dari halaman (mis. bersihkan cache). */
+self.addEventListener('message', (event) => {
+    const data = event.data || {};
+
+    if (data.type === 'LEWATI_TUNGGU') {
+        self.skipWaiting();
+    }
+
+    if (data.type === 'BERSIHKAN_CACHE') {
+        event.waitUntil((async () => {
+            const nama = await caches.keys();
+            await Promise.all(nama.filter(n => n.startsWith('webgis-')).map(n => caches.delete(n)));
+            if (event.source) event.source.postMessage({ type: 'CACHE_DIBERSIHKAN' });
+        })());
+    }
+});

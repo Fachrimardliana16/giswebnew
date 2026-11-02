@@ -1,6 +1,7 @@
 @import "./mobile.css";
 @import "./popup.css";
 @import "./search.css";
+@import "./pwa.css";
 
 @tailwind base;
 @tailwind components;

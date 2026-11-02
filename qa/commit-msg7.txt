@@ -1,0 +1,50 @@
+feat(pwa): offline-ready, installable, dan pecah filters.js per domain
+
+P4g - filters.js dipecah (319 baris, 3 domain bercampur):
+  gis/cql.js               pembangun CQL murni tanpa DOM (cqlPelanggan,
+                           cqlPipa, cqlPengaduan) + escape kutip
+  gis/filters/pelanggan.js status, cabang, tarif, kubikasi, tunggakan,
+                           umur WM, rayon, cater
+  gis/filters/pipa.js      material, jenis jaringan, unit IKK, diameter,
+                           sumber air
+  gis/filters/pengaduan.js status & tahun pengaduan
+  gis/filters.js           kini hanya titik masuk (14 baris)
+  Bonus keamanan: diameter kini disaring jadi angka saja, status/tahun
+  pengaduan divalidasi regex sebelum masuk CQL.
+  Terukur: CQL yang dihasilkan identik dengan sebelumnya
+  (status='2' AND ... , diameter IN (...)).
+
+P2f + P3 - PWA:
+  public/manifest.webmanifest  name, display standalone, theme #1d4ed8,
+                               3 ikon (any/maskable) + shortcut Peta
+  public/icons/*               192, 512, maskable-512, apple-touch-icon,
+                               favicon-32 (digenerate tanpa dependensi)
+  resources/sw/sw.js           cache per jenis: aset berhash cache-first,
+                               tile WMS GetMap cache-first (batas 400),
+                               basemap OSM/Google cache-first, HTML
+                               network-first, /geo-proxy non-GetMap
+                               network-only, non-GET tidak disentuh
+  gis/pwa.js                   registrasi SW, tombol "Pasang Aplikasi"
+                               (beforeinstallprompt), indikator offline,
+                               hapus cache
+  routes/web.php               /sw.js dan /manifest.webmanifest
+
+  PENTING - sw.js sengaja diletakkan di resources/sw/, BUKAN public/.
+  Saat berada di public/, web server menyajikannya sebagai file statis
+  sehingga header no-cache tidak terpakai (terukur: Cache-Control None).
+  Sekarang route mengirim no-cache, no-store, must-revalidate +
+  Service-Worker-Allowed: /. Tanpa ini, versi SW baru tidak akan pernah
+  terpakai di browser pengguna.
+  Registrasi login memakai file terpisah public/js/pwa-login.js karena
+  halaman login tidak memuat app.js dan CSP melarang script inline.
+
+Terukur:
+  - /sw.js 200 dengan Cache-Control no-cache, no-store
+  - manifest valid, 3 ikon PNG terakses (192/512/maskable)
+  - SW terdaftar, state activated, scope /
+  - cache terbentuk: aset 3, halaman 1, lain 1, tile 16
+  - jaringan DIMATIKAN: /dashboard tetap tampil, peta ada, bilah
+    "Mode offline" muncul; setelah online bilah hilang otomatis
+
+PHPUnit 55 passed. Regresi accordion, GetFeatureInfo, dan seluruh
+filter (CQL) tetap identik.
