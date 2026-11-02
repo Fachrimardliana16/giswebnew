@@ -1,0 +1,42 @@
+fix(pwa): halaman blank — service worker merusak aset CDN
+
+Dilaporkan: PWA blank total setelah "Muat ulang", logout & restart aplikasi
+tidak membantu.
+
+PENYEBAB (terukur di konsol):
+  Failed to load resource: net::ERR_FAILED  -> jquery.min.js, leaflet.js,
+  leaflet.css, font Google, ikon flaticon
+  Uncaught TypeError: window.map.on is not a function
+    at app-xxx.js
+
+Service worker ikut meng-cache request CROSS-ORIGIN (cdnjs, fonts, ikon).
+< script >/< link > mengirim request no-cors, sehingga responsnya OPAQUE:
+status selalu 0 dan res.ok SELALU false. cacheDulu() menyimpan respons
+tersebut, lalu saat dibaca kembali pengecekan res.ok gagal dan SW
+mengembalikan error. Akibatnya jQuery & Leaflet tidak pernah termuat,
+window.map diisi objek lain, dan initMap() melempar TypeError -> halaman
+tidak pernah dirender.
+
+Bukti: setelah SW di-unregister & cache dihapus,
+  typeof window.jQuery = "function"
+  typeof window.L      = "object"
+Sebelumnya keduanya undefined.
+
+PERBAIKAN:
+1. SW tidak lagi menyentuh request cross-origin sama sekali
+   (url.origin !== self.location.origin -> return). Cache HTTP browser
+   yang mengurus CDN.
+2. Tile basemap OSM/Google tetap dicache, tetapi dengan penanganan khusus:
+   respons opaque diizinkan disimpan (res.type === 'opaque') dan
+   kegagalan cache TIDAK PERNAH menggagalkan muat tile.
+3. Versi SW v2 -> v3 (cache lama dihapus saat activate).
+4. app.js memeriksa ketersediaan Leaflet sebelum initMap(). Kalau gagal,
+   tampilkan kartu "Peta tidak dapat dimuat" + tombol "Muat ulang" yang
+   membersihkan cache SW lebih dulu - BUKAN halaman blank.
+
+Terukur setelah perbaikan:
+  - sebelum & SESUDAH cache rusak disuntik: jquery=function, leaflet=object,
+    map_punya_on=true, body_text_len=1549, blank=false, toast=0
+  - entri cache non-origin hanya sisa suntikan manual (SW tidak menambah)
+  - offline: halaman + peta tetap tampil, bilah "Mode offline" muncul
+  - PHPUnit 55 passed

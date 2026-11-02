@@ -17,7 +17,7 @@
  * browser memakai SW lama dan perubahan tidak pernah sampai ke pengguna.
  */
 
-const VERSI = 'v2-2026-11-02b';
+const VERSI = 'v3-2026-11-02c';
 const CACHE_ASET = `webgis-aset-${VERSI}`;
 const CACHE_TILE = `webgis-tile-${VERSI}`;
 const CACHE_HALAMAN = `webgis-halaman-${VERSI}`;
@@ -176,8 +176,28 @@ self.addEventListener('fetch', (event) => {
     }
 
     // ---------- 2. Tile basemap eksternal ----------
+    // Tile OSM/Google dimuat lewat <img> (no-cors) -> respons opaque.
+    // Aman disimpan karena cache gambar tidak rantai ke eksekusi JS, tetapi
+    // JANGAN pernah memblokir: kalau cache gagal, tetap teruskan ke jaringan.
     if (/tile\.openstreetmap\.org|mt\d\.google\.com/.test(url.hostname)) {
-        event.respondWith(cacheDulu(request, CACHE_TILE, BATAS_TILE));
+        event.respondWith((async () => {
+            try {
+                const cache = await caches.open(CACHE_TILE);
+                const tersimpan = await cache.match(request);
+                if (tersimpan) return tersimpan;
+
+                const res = await fetch(request);
+                // opaque: status 0, tetap boleh disimpan sebagai gambar
+                if (res && (res.ok || res.type === 'opaque')) {
+                    cache.put(request, res.clone()).catch(() => {});
+                    batasiCache(CACHE_TILE, BATAS_TILE);
+                }
+                return res;
+            } catch (e) {
+                // jangan pernah menggagalkan muat tile
+                return fetch(request).catch(() => new Response('', { status: 504 }));
+            }
+        })());
         return;
     }
 
@@ -194,8 +214,16 @@ self.addEventListener('fetch', (event) => {
     }
 
     // ---------- 5. Aset statis lain (font, css CDN) ----------
-    if (/cdnjs|fonts\.googleapis|fonts\.gstatic|cdn-icons-png|unpkg/.test(url.host)) {
-        event.respondWith(cacheDulu(request, CACHE_LAIN, BATAS_LAIN));
+    // JANGAN dicache oleh SW.
+    //
+    // Respons cross-origin dari <link>/<script> bersifat OPAQUE (no-cors):
+    // status selalu 0 dan res.ok selalu false. Saat disimpan lalu dibaca
+    // kembali, pengecekan `res.ok` gagal dan SW mengembalikan error ->
+    // jQuery/Leaflet/font gagal dimuat -> window.map bukan objek Leaflet ->
+    // "window.map.on is not a function" -> halaman blank.
+    //
+    // Biarkan browser mengurus cache HTTP-nya sendiri.
+    if (url.origin !== self.location.origin) {
         return;
     }
 });

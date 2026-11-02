@@ -11,7 +11,7 @@
 
 import { showToast } from './toast.js';
 
-const VERSI_SW = 'v2-2026-11-02b';
+const VERSI_SW = 'v3-2026-11-02c';
 
 let promptInstall = null;
 

@@ -1,0 +1,67 @@
+/* ============================================================
+   Tampilan gagal-muat (mis. Leaflet gagal dari CDN)
+   Menggantikan halaman blank: beri tahu apa yang terjadi + tombol pulih.
+   ============================================================ */
+
+.grid-putus {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: #f1f5f9;
+}
+
+.grid-putus__kotak {
+    max-width: 340px;
+    text-align: center;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 26px 22px;
+    box-shadow: 0 12px 32px -12px rgba(15, 23, 42, 0.18);
+}
+
+.grid-putus__kotak svg {
+    width: 40px;
+    height: 40px;
+    color: #d97706;
+    margin: 0 auto 12px;
+    display: block;
+}
+
+.grid-putus__judul {
+    font-size: 15px;
+    font-weight: 900;
+    color: #0f172a;
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+}
+
+.grid-putus__teks {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    line-height: 1.5;
+    margin: 0 0 4px;
+}
+
+.grid-putus__tombol {
+    margin-top: 16px;
+    min-height: 44px;
+    padding: 0 22px;
+    border: 0;
+    border-radius: 12px;
+    background: #2563eb;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    box-shadow: 0 8px 20px -6px rgba(37, 99, 235, 0.6);
+}
+
+.grid-putus__tombol:active {
+    transform: scale(0.96);
+}

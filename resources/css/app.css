@@ -2,6 +2,7 @@
 @import "./popup.css";
 @import "./search.css";
 @import "./pwa.css";
+@import "./fallback.css";
 
 @tailwind base;
 @tailwind components;

@@ -13,6 +13,39 @@ import { initSearchSuggest } from './gis/searchSuggest.js';
 import { initPwa } from './gis/pwa.js';
 
 /**
+ * Tampilkan pesan gagal-muat di dalam area peta, bukan halaman blank.
+ */
+function tampilkanGagalPustaka(pesan) {
+    const wadah = document.getElementById('map');
+    if (!wadah) return;
+
+    wadah.innerHTML = `
+        <div class="grid-putus">
+            <div class="grid-putus__kotak">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 9v4m0 4h.01"></path>
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"></path>
+                </svg>
+                <h2 class="grid-putus__judul">Peta tidak dapat dimuat</h2>
+                ${pesan.map(p => `<p class="grid-putus__teks">${String(p).replace(/[<>&]/g, '')}</p>`).join('')}
+                <button type="button" class="grid-putus__tombol" id="gridPutusMuatUlang">Muat ulang</button>
+            </div>
+        </div>`;
+
+    document.getElementById('gridPutusMuatUlang')?.addEventListener('click', async () => {
+        // bersihkan cache service worker dulu: penyebab paling sering
+        try {
+            const reg = await navigator.serviceWorker?.getRegistration();
+            reg?.active?.postMessage({ type: 'BERSIHKAN_CACHE' });
+        } catch (e) { /* diabaikan */ }
+        setTimeout(() => location.reload(), 400);
+    });
+
+    console.error('Peta gagal dimuat:', pesan.join(' '));
+}
+
+/**
  * Initialize the application when DOM is ready.
  *
  * Cek readyState dulu: skrip dimuat sebagai module (defer), jadi pada
@@ -31,6 +64,22 @@ async function boot() {
     initSidebarSections();
     initLoadingWatchdog();
     initMobileApp();
+
+    /*
+     * Leaflet & jQuery dimuat dari CDN (cdnjs). Kalau gagal — CDN lambat,
+     * jaringan memblokir, atau cache rusak — initMap() akan melempar error
+     * dan aplikasi berhenti tanpa peta. Dulu efeknya halaman tampak blank
+     * dan error "window.map.on is not a function" membingungkan.
+     *
+     * Sekarang diperiksa lebih dulu dan diberi pesan yang bisa ditindak.
+     */
+    if (typeof window.L === 'undefined' || typeof window.L.map !== 'function') {
+        tampilkanGagalPustaka([
+            'Pustaka peta (Leaflet) gagal dimuat.',
+            'Periksa koneksi internet, lalu muat ulang halaman.',
+        ]);
+        return;
+    }
 
     try {
         // Initialize map
