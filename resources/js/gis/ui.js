@@ -49,19 +49,22 @@ export function initMobileToggle() {
     const sidebar = document.getElementById('sidebar');
     const toggleBtn = document.getElementById('sidebarToggle');
     const backdrop = document.getElementById('sidebarBackdrop');
-    
+
+    // Di mobile, sidebar dikelola mobileApp.js sebagai bottom sheet.
+    // Toggle lama hanya untuk lebar desktop/tablet.
+    const desktopOnly = () => window.matchMedia('(min-width: 768px)').matches;
+
     if (toggleBtn && sidebar && backdrop) {
         const toggleSidebar = () => {
+            if (!desktopOnly()) return;
             const isOpen = !sidebar.classList.contains('-translate-x-full');
-            
+
             if (!isOpen) {
-                // Open
                 sidebar.classList.remove('-translate-x-full');
                 sidebar.classList.add('translate-x-0');
                 backdrop.classList.remove('hidden');
                 document.body.style.overflow = 'hidden';
             } else {
-                // Close
                 sidebar.classList.add('-translate-x-full');
                 sidebar.classList.remove('translate-x-0');
                 backdrop.classList.add('hidden');
@@ -112,6 +115,14 @@ export function initProfileDropdown() {
 
         // Close on click outside
         document.addEventListener('click', (e) => {
+            if (dropdown.classList.contains('hidden')) return;
+
+            // Klik pada kontrol mobile shell tidak dianggap "di luar"
+            const diShell = e.target.closest && e.target.closest(
+                '[data-bottom-nav], [data-sheet-backdrop], .sidebar-sheet'
+            );
+            if (diShell) return;
+
             if (!container.contains(e.target)) {
                 dropdown.classList.add('opacity-0', 'scale-95');
                 dropdown.classList.remove('opacity-100', 'scale-100');

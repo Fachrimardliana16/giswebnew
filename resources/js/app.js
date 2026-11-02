@@ -8,6 +8,7 @@ import { initSearch } from './gis/search.js';
 import { initFeatureInfo } from './gis/featureInfo.js';
 import { showToast } from './gis/toast.js';
 import { initLoadingWatchdog } from './gis/loadingWatchdog.js';
+import { initMobileApp } from './gis/mobileApp.js';
 
 /**
  * Initialize the application when DOM is ready.
@@ -24,6 +25,7 @@ async function boot() {
     initMobileSearch();
     initSidebarSections();
     initLoadingWatchdog();
+    initMobileApp();
 
     try {
         // Initialize map

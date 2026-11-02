@@ -34,7 +34,7 @@
     <header class="bg-glass-blue border-b border-blue-400/30 h-16 flex items-center justify-between px-6 z-50 sticky top-0 shadow-premium">
         <!-- Logo & Toggle -->
         <div class="flex items-center gap-4">
-            <button id="sidebarToggle" aria-label="Buka menu navigasi" aria-controls="sidebar" class="p-2.5 rounded-2xl text-white bg-white/10 md:hidden hover:bg-white hover:text-blue-600 transition-all border border-white/20 shadow-sm shadow-blue-500/10">
+            <button id="sidebarToggle" aria-label="Buka menu navigasi" aria-controls="sidebar" class="hidden p-2.5 rounded-2xl text-white bg-white/10 hover:bg-white hover:text-blue-600 transition-all border border-white/20 shadow-sm shadow-blue-500/10">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
@@ -73,7 +73,7 @@
             </div>
             
             <!-- Mobile Search Toggle -->
-            <button id="mobileSearchToggle" aria-label="Buka pencarian" aria-controls="mobileSearchContainer" class="md:hidden p-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all">
+            <button id="mobileSearchToggle" aria-label="Buka pencarian" aria-controls="mobileSearchContainer" class="hidden p-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
@@ -124,7 +124,7 @@
     </header>
 
     <!-- Mobile Search Bar (Expandable) -->
-    <div id="mobileSearchContainer" class="bg-blue-700/95 backdrop-blur-md md:hidden flex items-center px-4 z-40 transition-all duration-300">
+    <div id="mobileSearchContainer" class="hidden bg-blue-700/95 backdrop-blur-md flex items-center px-4 z-40 transition-all duration-300">
         <div class="relative w-full">
             <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
                 <svg class="w-4 h-4 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,6 +144,10 @@
             @yield('content')
         </main>
     </div>
+
+    @if(!empty($mobileShell ?? false))
+        @include('partials.mobile-shell')
+    @endif
 
     <footer class="bg-blue-900 border-t border-blue-800 p-3 text-center text-[10px] font-bold tracking-widest z-50">
         <p class="text-blue-300/60">

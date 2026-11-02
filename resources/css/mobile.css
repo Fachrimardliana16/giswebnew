@@ -1,0 +1,488 @@
+
+/* ============================================================
+   MOBILE APP SHELL
+   Hanya aktif di <= 767px. Desktop tidak terpengaruh.
+   ============================================================ */
+
+:root {
+    --mobile-header-h: 56px;
+    --mobile-nav-h: 60px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --sheet-radius: 24px;
+}
+
+/* ---------- Layout dasar: peta penuh, tanpa footer ---------- */
+@media (max-width: 767px) {
+    html, body {
+        height: 100%;
+        overflow: hidden;
+        overscroll-behavior: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Footer copyright bukan pola aplikasi: sembunyikan di mobile */
+    body > footer {
+        display: none !important;
+    }
+
+    /* Header ringkas + safe-area atas */
+    body > header {
+        height: var(--mobile-header-h) !important;
+        padding-top: var(--safe-top);
+        height: calc(var(--mobile-header-h) + var(--safe-top)) !important;
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    /* Area konten: peta mengisi sisa tinggi di atas bottom nav */
+    body > .flex-1 {
+        padding-bottom: calc(var(--mobile-nav-h) + var(--safe-bottom));
+        min-height: 0;
+    }
+
+    /* Peta penuh sampai nav */
+    #map {
+        height: 100% !important;
+    }
+
+    /* Kontrol peta digeser supaya tidak tertutup nav / FAB */
+    .leaflet-bottom.leaflet-right {
+        margin-bottom: calc(var(--mobile-nav-h) + 68px + var(--safe-bottom)) !important;
+        margin-right: 10px !important;
+    }
+
+    .leaflet-top.leaflet-left {
+        margin-top: 8px !important;
+    }
+
+    .leaflet-control-attribution {
+        font-size: 9px !important;
+        max-width: 60%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+/* ---------- Bottom navigation ---------- */
+.mobile-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 70;
+    display: none;
+    grid-template-columns: repeat(4, 1fr);
+    align-items: center;
+    padding-bottom: var(--safe-bottom);
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 -4px 24px -8px rgba(15, 23, 42, 0.15);
+}
+
+@media (max-width: 767px) {
+    .mobile-nav {
+        display: grid;
+    }
+}
+
+.mobile-nav__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-height: var(--mobile-nav-h);
+    height: var(--mobile-nav-h);
+    padding: 0;
+    border: 0;
+    background: none;
+    box-sizing: border-box;
+    color: #94a3b8;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.15s ease;
+    position: relative;
+}
+
+.mobile-nav__item svg {
+    width: 22px;
+    height: 22px;
+}
+
+.mobile-nav__item[aria-selected="true"] {
+    color: #2563eb;
+}
+
+.mobile-nav__item[aria-selected="true"]::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 28px;
+    height: 3px;
+    border-radius: 0 0 4px 4px;
+    background: #2563eb;
+}
+
+.mobile-nav__item:active {
+    transform: scale(0.94);
+}
+
+/* Badge kecil di tab Layer (jumlah layer aktif) */
+.mobile-nav__badge {
+    position: absolute;
+    top: 4px;
+    right: 50%;
+    transform: translateX(16px);
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background: #2563eb;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 900;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-nav__badge[data-show="1"] {
+    display: flex;
+}
+
+/* ---------- FAB (aksi cepat) ---------- */
+.mobile-fab {
+    position: fixed;
+    right: 14px;
+    bottom: calc(var(--mobile-nav-h) + 14px + var(--safe-bottom));
+    z-index: 65;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+}
+
+@media (max-width: 767px) {
+    .mobile-fab {
+        display: flex;
+    }
+}
+
+.mobile-fab__btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(14px) saturate(180%);
+    -webkit-backdrop-filter: blur(14px) saturate(180%);
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px -8px rgba(15, 23, 42, 0.28);
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.mobile-fab__btn:active {
+    transform: scale(0.93);
+}
+
+.mobile-fab__btn--primary {
+    background: #2563eb;
+    color: #fff;
+    border-color: rgba(37, 99, 235, 0.4);
+}
+
+/* ---------- Search bar melayang ---------- */
+.mobile-search-float {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    right: 12px;
+    z-index: 45;
+    display: none;
+}
+
+@media (max-width: 767px) {
+    .mobile-search-float {
+        display: block;
+    }
+}
+
+.mobile-search-float__field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 46px;
+    padding: 0 8px 0 14px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 8px 28px -10px rgba(15, 23, 42, 0.3);
+}
+
+.mobile-search-float__field input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: none;
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.mobile-search-float__field input::placeholder {
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.mobile-search-float__btn {
+    flex: 0 0 auto;
+    height: 34px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 10px;
+    background: #2563eb;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.mobile-search-float__btn:active {
+    transform: scale(0.95);
+}
+
+/* ---------- Bottom sheet (sidebar versi mobile) ---------- */
+@media (max-width: 767px) {
+    .sidebar-sheet {
+        position: fixed !important;
+        inset: auto 0 0 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 78vh !important;
+        max-height: 78vh !important;
+        border-radius: var(--sheet-radius) var(--sheet-radius) 0 0 !important;
+        border-right: 0 !important;
+        border-top: 1px solid rgba(15, 23, 42, 0.1) !important;
+        z-index: 80 !important;
+        transform: translateY(100%) !important;
+        transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1) !important;
+        box-shadow: 0 -12px 40px -12px rgba(15, 23, 42, 0.35) !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    .sidebar-sheet[data-open="1"] {
+        transform: translateY(0) !important;
+    }
+
+    .sidebar-sheet[data-dragging="1"] {
+        transition: none !important;
+    }
+}
+
+/* Gagang sheet */
+.sidebar-sheet__handle {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    .sidebar-sheet__handle {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        flex: 0 0 auto;
+        padding: 10px 0 8px;
+        cursor: grab;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    .sidebar-sheet__handle::before {
+        content: "";
+        width: 44px;
+        height: 5px;
+        border-radius: 3px;
+        background: #cbd5e1;
+    }
+
+    .sidebar-sheet__handle-label {
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #94a3b8;
+    }
+
+    /* Isi sheet bisa digulir */
+    .sidebar-sheet > div {
+        min-height: 0 !important;
+        flex: 1 1 auto !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+    }
+}
+
+/* Backdrop sheet */
+.sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 75;
+    display: none;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+@media (max-width: 767px) {
+    .sheet-backdrop[data-open="1"] {
+        display: block;
+        opacity: 1;
+    }
+}
+
+/* ---------- Target sentuh minimal 44px di mobile ---------- */
+@media (max-width: 767px) {
+    button,
+    [role="button"],
+    a.btn,
+    .mobile-nav__item,
+    input[type="checkbox"],
+    select {
+        min-height: 44px;
+    }
+
+    input[type="checkbox"] {
+        min-height: 22px;
+        min-width: 22px;
+    }
+
+    /* Baris checkbox layer: seluruh baris jadi target sentuh 44px */
+    .layer-control > div,
+    .layer-control > div > div,
+    .layer-control .group,
+    .layer-control label {
+        min-height: 44px;
+    }
+
+    .layer-control label {
+        display: flex;
+        align-items: center;
+        flex: 1;
+        cursor: pointer;
+    }
+
+    /* Input pencarian melayang: tinggi penuh area field */
+    #mobileFloatSearch {
+        min-height: 40px;
+        height: 40px;
+    }
+
+    /* Atribusi Leaflet bukan target sentuh, jangan dipaksa 44px */
+    .leaflet-control-attribution,
+    .leaflet-control-attribution a {
+        min-height: 0 !important;
+    }
+
+    /* Checkbox layer: baris penuh bisa disentuh */
+    .layer-checkbox,
+    .pipa-checkbox,
+    .pipa-sumberma-checkbox,
+    .aksesoris-checkbox,
+    .pelanggan-checkbox,
+    .pengduan-checkbox {
+        width: 22px !important;
+        height: 22px !important;
+        min-height: 22px !important;
+    }
+
+    label {
+        min-height: 32px;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    /* Font input >= 16px mencegah iOS auto-zoom saat fokus */
+    input[type="text"],
+    input[type="search"],
+    input[type="password"],
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* ---------- Toast di mobile: di atas bottom nav ---------- */
+@media (max-width: 767px) {
+    #toast-container {
+        top: auto !important;
+        bottom: calc(var(--mobile-nav-h) + 16px + var(--safe-bottom)) !important;
+        transform: translateX(-50%) !important;
+    }
+}
+
+/* ---------- Dropdown profil: bottom sheet di mobile ---------- */
+@media (max-width: 767px) {
+    #profileDropdown {
+        position: fixed !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        top: auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        border-radius: 22px 22px 0 0 !important;
+        padding-bottom: calc(12px + var(--safe-bottom)) !important;
+        z-index: 90 !important;
+        transform-origin: bottom center !important;
+    }
+
+    #profileDropdown > div:first-child {
+        border-radius: 22px 22px 0 0;
+        padding: 16px 18px 14px;
+    }
+
+    #profileDropdown a {
+        min-height: 52px !important;
+        padding: 12px 16px !important;
+    }
+}
+
+/* ---------- Modal: full-width sheet di mobile ---------- */
+@media (max-width: 767px) {
+    [id$="Modal"] > div {
+        max-width: 100% !important;
+        border-radius: 20px 20px 0 0 !important;
+        align-self: flex-end;
+        margin-bottom: 0 !important;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    [id$="Modal"] {
+        align-items: flex-end !important;
+        padding: 0 !important;
+    }
+}

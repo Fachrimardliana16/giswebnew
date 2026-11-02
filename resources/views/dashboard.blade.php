@@ -5,12 +5,28 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 @endpush
 
+@php($mobileShell = true)   {{-- aktifkan bottom nav + FAB di layout --}}
+
 @section('content')
     <div class="flex-1 relative overflow-hidden group">
         <div id="map" class="absolute inset-0"></div>
-        
-        <!-- Custom Map Controls -->
-        <div class="absolute top-20 md:top-6 right-4 md:right-6 z-30 flex flex-col gap-3">
+
+        {{-- Search melayang (mobile): menggantikan search bar header --}}
+        <div class="mobile-search-float">
+            <div class="mobile-search-float__field">
+                <svg width="18" height="18" fill="none" stroke="#94a3b8" viewBox="0 0 24 24" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <input type="search" id="mobileFloatSearch" placeholder="Cari nama / no. langganan"
+                       autocomplete="off" enterkeyhint="search" inputmode="search"
+                       aria-label="Cari pelanggan">
+                <button type="button" class="mobile-search-float__btn" id="mobileFloatSearchBtn">Cari</button>
+            </div>
+        </div>
+
+        <!-- Custom Map Controls (desktop) — di mobile digantikan FAB -->
+        <div class="absolute top-20 md:top-6 right-4 md:right-6 z-30 hidden md:flex flex-col gap-3">
             <!-- Base Map Toggle -->
             <button id="baseMapToggle" aria-label="Ganti tampilan peta" class="flex items-center md:gap-3 p-2.5 md:px-4 md:py-3 bg-glass border border-white/30 rounded-2xl shadow-premium hover:scale-105 active:scale-95 transition-all group overflow-hidden">
                 <div class="w-9 h-9 rounded-xl bg-blue-50/50 flex items-center justify-center text-blue-600 transition-all group-hover:bg-blue-600 group-hover:text-white shadow-inner" id="baseMapIcon">

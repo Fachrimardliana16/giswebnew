@@ -5,7 +5,12 @@ $pipeSizes = config('gis.pipe_sizes', []);
 $accessories = config('gis.accessories', []);
 @endphp
 
-<aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-glass border-r border-white/20 flex flex-col z-[60] -translate-x-full md:translate-x-0 md:relative transition-all duration-500 ease-in-out shadow-premium">
+<aside id="sidebar" class="sidebar-sheet bg-glass border-r border-white/20 flex flex-col z-[60] -translate-x-full md:translate-x-0 md:relative transition-all duration-500 ease-in-out shadow-premium">
+    {{-- Gagang bottom sheet (mobile saja) --}}
+    <div class="sidebar-sheet__handle" data-sheet-handle aria-hidden="true">
+        <span class="sidebar-sheet__handle-label">Layer</span>
+    </div>
+
     <div class="flex-grow overflow-y-auto px-4 py-8 custom-scrollbar">
 
         <div class="px-2 mb-4 mt-4">
