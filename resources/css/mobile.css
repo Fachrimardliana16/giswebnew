@@ -73,7 +73,7 @@
     bottom: 0;
     z-index: 70;
     display: none;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     align-items: center;
     padding-bottom: var(--safe-bottom);
     background: rgba(255, 255, 255, 0.92);
@@ -347,8 +347,8 @@ body:has(.mobile-header-search[data-open="1"]) .mobile-fab {
         inset: auto 0 0 0 !important;
         width: 100% !important;
         max-width: 100% !important;
-        height: 78vh !important;
-        max-height: 78vh !important;
+        height: 88vh !important;
+        max-height: 88vh !important;
         border-radius: var(--sheet-radius) var(--sheet-radius) 0 0 !important;
         border-right: 0 !important;
         border-top: 1px solid rgba(15, 23, 42, 0.1) !important;
@@ -370,6 +370,17 @@ body:has(.mobile-header-search[data-open="1"]) .mobile-fab {
     }
 }
 
+/* Header sheet hanya untuk mobile */
+.sidebar-sheet__head {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    .sidebar-sheet__head {
+        display: flex;
+    }
+}
+
 /* Gagang sheet */
 .sidebar-sheet__handle {
     display: none;
@@ -378,32 +389,14 @@ body:has(.mobile-header-search[data-open="1"]) .mobile-fab {
 @media (max-width: 767px) {
     .sidebar-sheet__handle {
         display: flex;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 6px;
         flex: 0 0 auto;
-        padding: 10px 0 8px;
+        padding: 8px 0 2px;
         cursor: grab;
         touch-action: none;
         user-select: none;
         -webkit-user-select: none;
-    }
-
-    .sidebar-sheet__handle::before {
-        content: "";
-        width: 44px;
-        height: 5px;
-        border-radius: 3px;
-        background: #cbd5e1;
-    }
-
-    .sidebar-sheet__handle-label {
-        font-size: 10px;
-        font-weight: 900;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: #94a3b8;
     }
 
     /* Isi sheet bisa digulir */
@@ -537,15 +530,85 @@ body:has(.mobile-header-search[data-open="1"]) .mobile-fab {
         border-radius: 11px !important;
     }
 
-    /* Gagang sheet: lebih ringkas */
+    /* ---------- Header sheet: gagang + judul + tombol tutup ---------- */
     .sidebar-sheet__handle {
-        padding: 8px 0 4px !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        padding: 8px 0 2px !important;
+        cursor: grab;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
     }
 
-    .sidebar-sheet__handle-label {
-        font-size: 9px !important;
-        letter-spacing: 0.18em !important;
-        color: #a3aec0;
+    .sidebar-sheet__grip {
+        width: 42px;
+        height: 4px;
+        border-radius: 3px;
+        background: #cbd5e1;
+        display: block;
+    }
+
+    .sidebar-sheet__head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 0 0 auto;
+        padding: 4px 16px 10px !important;
+        border-bottom: 1px solid rgba(15, 23, 42, 0.07);
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+    .sidebar-sheet__head-text {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .sidebar-sheet__title {
+        font-size: 15px !important;
+        font-weight: 900 !important;
+        letter-spacing: -0.01em;
+        color: #0f172a;
+        line-height: 1.15;
+        margin: 0;
+        text-transform: none !important;
+    }
+
+    .sidebar-sheet__subtitle {
+        font-size: 11px !important;
+        font-weight: 600;
+        color: #94a3b8;
+        margin: 2px 0 0;
+        line-height: 1.2;
+    }
+
+    .sidebar-sheet__close {
+        flex: 0 0 auto;
+        width: 40px;
+        height: 40px;
+        min-height: 40px !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: #fff;
+        color: #64748b;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+    }
+
+    .sidebar-sheet__close:active {
+        transform: scale(0.93);
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+
+    /* Jarak isi sheet dari header */
+    .sidebar-sheet > div:nth-child(3) {
+        padding-top: 8px !important;
     }
 }
 

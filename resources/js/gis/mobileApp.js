@@ -83,12 +83,15 @@ export function bukaSheet(mode = null) {
     if (backdrop) backdrop.dataset.open = '1';
     document.body.style.overflow = 'hidden';
 
-    const label = sheet.querySelector('.sidebar-sheet__handle-label');
-    if (label) {
-        label.textContent = mode === 'pelanggan' ? 'Data Pelanggan'
-            : mode === 'pipa' ? 'Jaringan & Asesoris'
-            : 'Layer';
-    }
+    const judul = {
+        pelanggan: ['Data Pelanggan', 'Filter & tampilkan data pelanggan'],
+        pipa: ['Jaringan & Asesoris', 'Pilih pipa, sumber air, dan asesoris'],
+    };
+    const t = mode && judul[mode] ? judul[mode] : ['Layer', 'Pilih data yang ingin ditampilkan'];
+    const elJudul = document.getElementById('sheetTitle');
+    const elSub = document.getElementById('sheetSubtitle');
+    if (elJudul) elJudul.textContent = t[0];
+    if (elSub) elSub.textContent = t[1];
 
     const fokusable = sheet.querySelector('input:not([type=hidden]), select');
     if (fokusable) {

@@ -6,9 +6,22 @@ $accessories = config('gis.accessories', []);
 @endphp
 
 <aside id="sidebar" class="sidebar-sheet bg-glass border-r border-white/20 flex flex-col z-[60] -translate-x-full md:translate-x-0 md:relative transition-all duration-500 ease-in-out shadow-premium">
-    {{-- Gagang bottom sheet (mobile saja) --}}
-    <div class="sidebar-sheet__handle" data-sheet-handle aria-hidden="true">
-        <span class="sidebar-sheet__handle-label">Layer</span>
+    {{-- Header sheet (mobile): judul + tombol tutup yang jelas.
+         Gagang tetap ada untuk drag, tapi sekarang punya label dan close. --}}
+    <div class="sidebar-sheet__handle" data-sheet-handle>
+        <span class="sidebar-sheet__grip" aria-hidden="true"></span>
+    </div>
+    <div class="sidebar-sheet__head">
+        <div class="sidebar-sheet__head-text">
+            <h2 class="sidebar-sheet__title" id="sheetTitle">Layer</h2>
+            <p class="sidebar-sheet__subtitle" id="sheetSubtitle">Pilih data yang ingin ditampilkan</p>
+        </div>
+        <button type="button" class="sidebar-sheet__close" data-sheet-close
+                aria-label="Tutup panel" title="Tutup">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
     </div>
 
     <div class="flex-grow overflow-y-auto px-4 py-8 custom-scrollbar">
