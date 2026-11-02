@@ -44,7 +44,7 @@ export const initLayers = () => {
     all_strainer: createWMSLayer('all_strainer'),
     all_tee: createWMSLayer('all_tee'),
     all_titik_tekanan: createWMSLayer('all_titik_tekanan'),
-    all_washout1: createWMSLayer('all_washout1')
+    all_washout: createWMSLayer('all_washout')
   };
 
   return layers;

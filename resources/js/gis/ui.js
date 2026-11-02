@@ -5,18 +5,41 @@
 export function toggleSection(id) {
     const content = document.getElementById(`content-${id}`);
     const icon = document.getElementById(`icon-${id}`);
-    
+    const header = document.querySelector(`[data-section-toggle="${id}"]`);
+
     if (content && icon) {
         const isHidden = content.classList.contains('hidden');
-        
+
         if (isHidden) {
             content.classList.remove('hidden');
             icon.classList.add('rotate-180');
+            if (header) header.setAttribute('aria-expanded', 'true');
         } else {
             content.classList.add('hidden');
             icon.classList.remove('rotate-180');
+            if (header) header.setAttribute('aria-expanded', 'false');
         }
     }
+}
+
+/**
+ * Pasang listener accordion sidebar.
+ *
+ * Tidak memakai onclick= inline karena CSP (script-src tanpa unsafe-inline)
+ * memblokirnya tanpa pesan yang terlihat — tombol jadi mati diam-diam.
+ */
+export function initSidebarSections() {
+    document.querySelectorAll('[data-section-toggle]').forEach(header => {
+        const id = header.getAttribute('data-section-toggle');
+
+        header.addEventListener('click', () => toggleSection(id));
+        header.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleSection(id);
+            }
+        });
+    });
 }
 
 /**

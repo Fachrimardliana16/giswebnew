@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@section('admin-assets')
+    @vite(['resources/js/admin.js'])
+@endsection
+
 @section('content')
 <div class="p-6 space-y-6 overflow-y-auto custom-scrollbar h-full">
     <!-- Header -->
@@ -9,13 +13,13 @@
             <p class="text-sm text-slate-500 font-medium">Kelola akses akun dan perizinan sistem.</p>
         </div>
         <div class="flex items-center gap-3">
-            <button id="bulkDeleteBtn" onclick="bulkDelete()" class="hidden bg-red-600 text-white px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-red-700 active:scale-95 transition-all shadow-lg shadow-red-500/20 flex items-center gap-2">
+            <button id="bulkDeleteBtn" data-bulk-delete class="hidden bg-red-600 text-white px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-red-700 active:scale-95 transition-all shadow-lg shadow-red-500/20 flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                 </svg>
                 Hapus Terpilih (<span id="selectedCount">0</span>)
             </button>
-            <button onclick="document.getElementById('addUserModal').classList.remove('hidden')" class="bg-blue-600 text-white px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 active:scale-95 transition-all shadow-lg shadow-blue-500/20 flex items-center gap-2">
+            <button data-modal-open="addUserModal" class="bg-blue-600 text-white px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 active:scale-95 transition-all shadow-lg shadow-blue-500/20 flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
                 </svg>
@@ -148,12 +152,12 @@
                         </td>
                         <td class="px-6 py-4 text-right">
                             <div class="flex items-center justify-end gap-2 opacity-60 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                                <button onclick="editUser({{ json_encode($user) }})" aria-label="Edit user {{ $user->username }}" title="Edit" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
+                                <button data-user-edit='{{ json_encode($user, JSON_HEX_APOS | JSON_HEX_QUOT) }}' aria-label="Edit user {{ $user->username }}" title="Edit" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
                                     </svg>
                                 </button>
-                                <button onclick="deleteUser({{ $user->id }})" aria-label="Hapus user {{ $user->username }}" title="Hapus" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                                <button data-user-delete="{{ $user->id }}" aria-label="Hapus user {{ $user->username }}" title="Hapus" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                     </svg>
@@ -185,7 +189,7 @@
     <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
         <div class="p-6 border-b border-slate-100 flex items-center justify-between">
             <h3 class="text-lg font-black text-slate-800 uppercase tracking-tighter">Tambah User Baru</h3>
-            <button onclick="document.getElementById('addUserModal').classList.add('hidden')" aria-label="Tutup dialog tambah user" class="text-slate-400 hover:text-slate-600">
+            <button data-modal-close="addUserModal" aria-label="Tutup dialog tambah user" class="text-slate-400 hover:text-slate-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
@@ -214,7 +218,7 @@
                 </select>
             </div>
             <div class="pt-2 flex gap-3">
-                <button type="button" onclick="document.getElementById('addUserModal').classList.add('hidden')" class="flex-1 bg-slate-100 text-slate-600 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Batal</button>
+                <button type="button" data-modal-close="addUserModal" class="flex-1 bg-slate-100 text-slate-600 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Batal</button>
                 <button type="submit" class="flex-1 bg-blue-600 text-white py-3.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all">Simpan User</button>
             </div>
         </form>
@@ -226,7 +230,7 @@
     <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
         <div class="p-6 border-b border-slate-100 flex items-center justify-between">
             <h3 class="text-lg font-black text-slate-800 uppercase tracking-tighter">Edit Data User</h3>
-            <button onclick="document.getElementById('editUserModal').classList.add('hidden')" aria-label="Tutup dialog edit user" class="text-slate-400 hover:text-slate-600">
+            <button data-modal-close="editUserModal" aria-label="Tutup dialog edit user" class="text-slate-400 hover:text-slate-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
@@ -256,7 +260,7 @@
                 </select>
             </div>
             <div class="pt-2 flex gap-3">
-                <button type="button" onclick="document.getElementById('editUserModal').classList.add('hidden')" class="flex-1 bg-slate-100 text-slate-600 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Batal</button>
+                <button type="button" data-modal-close="editUserModal" class="flex-1 bg-slate-100 text-slate-600 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Batal</button>
                 <button type="submit" class="flex-1 bg-blue-600 text-white py-3.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all">Perbarui Data</button>
             </div>
         </form>
@@ -274,74 +278,4 @@
     @csrf
 </form>
 
-<script>
-    const selectAll = document.getElementById('selectAll');
-    const userCheckboxes = document.querySelectorAll('.user-checkbox');
-    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
-    const selectedCount = document.getElementById('selectedCount');
-
-    if (selectAll) {
-        selectAll.addEventListener('change', function() {
-            document.querySelectorAll('.user-checkbox').forEach(cb => {
-                cb.checked = this.checked;
-            });
-            updateBulkButton();
-        });
-    }
-
-    document.addEventListener('change', function(e) {
-        if (e.target.classList.contains('user-checkbox')) {
-            updateBulkButton();
-        }
-    });
-
-    function updateBulkButton() {
-        const checkedCount = document.querySelectorAll('.user-checkbox:checked').length;
-        if (selectedCount) selectedCount.textContent = checkedCount;
-        
-        if (bulkDeleteBtn) {
-            if (checkedCount > 0) {
-                bulkDeleteBtn.classList.remove('hidden');
-            } else {
-                bulkDeleteBtn.classList.add('hidden');
-            }
-        }
-    }
-
-    function bulkDelete() {
-        if (confirm('Apakah Anda yakin ingin menghapus user yang terpilih secara massal?')) {
-            const form = document.getElementById('bulkDeleteForm');
-            const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
-            
-            // Clear previous inputs
-            form.querySelectorAll('input[name="ids[]"]').forEach(el => el.remove());
-            
-            checkedBoxes.forEach(cb => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'ids[]';
-                input.value = cb.value;
-                form.appendChild(input);
-            });
-            
-            form.submit();
-        }
-    }
-
-    function editUser(user) {
-        document.getElementById('editUserForm').action = "/settings/users/" + user.id;
-        document.getElementById('edit_name').value = user.name;
-        document.getElementById('edit_username').value = user.username;
-        document.getElementById('edit_role_id').value = user.role_id;
-        document.getElementById('editUserModal').classList.remove('hidden');
-    }
-
-    function deleteUser(userId) {
-        if (confirm('Apakah Anda yakin ingin menghapus user ini?')) {
-            const form = document.getElementById('deleteUserForm');
-            form.action = "/settings/users/" + userId;
-            form.submit();
-        }
-    }
-</script>
 @endsection

@@ -14,10 +14,16 @@
 
     <!-- CSS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css'])
 
-    {{-- Leaflet hanya dibutuhkan halaman ber-peta; dimuat lewat @push('styles')
-         di dashboard.blade.php supaya halaman admin tidak menanggung ~150 KB. --}}
+    {{-- Entry JS: peta (app.js) atau admin (admin.js). Halaman admin tidak
+         memuat app.js supaya modul tidak dieksekusi dua kali dan tidak
+         menanggung bundle peta. --}}
+    @hasSection('admin-assets')
+        @yield('admin-assets')
+    @else
+        @vite(['resources/js/app.js'])
+    @endif
 
     @stack('styles')
 </head>

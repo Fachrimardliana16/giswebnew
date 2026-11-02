@@ -33,6 +33,6 @@ return [
         'all_strainer' => 'Strainer',
         'all_tee' => 'Tee',
         'all_titik_tekanan' => 'Titik Tekanan',
-        'all_washout1' => 'Washout',
+        'all_washout' => 'Washout',
     ],
 ];

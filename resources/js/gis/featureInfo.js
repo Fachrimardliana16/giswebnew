@@ -19,7 +19,7 @@ export function initFeatureInfo(map, layers) {
         const priorityOrder = [
             'all_airvalve', 'all_bend', 'all_checkvalve', 'all_dop', 'all_firehydrant', 
             'all_gatevalve', 'all_meterinduk', 'all_prv', 'all_reducer', 'all_strainer', 
-            'all_tee', 'all_titik_tekanan', 'all_washout1',
+            'all_tee', 'all_titik_tekanan', 'all_washout',
             'pipa', // any ID containing 'pipa'
             'monitoring_pengaduan',
             'analisa_pelanggan'

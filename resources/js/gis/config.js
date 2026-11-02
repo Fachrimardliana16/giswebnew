@@ -33,7 +33,7 @@ export const LAYER_ZOOM_LEVELS = {
   all_strainer: { minZoom: 12, maxZoom: 22 },
   all_tee: { minZoom: 12, maxZoom: 22 },
   all_titik_tekanan: { minZoom: 12, maxZoom: 22 },
-  all_washout1: { minZoom: 12, maxZoom: 22 },
+  all_washout: { minZoom: 12, maxZoom: 22 },
   monitoring_pengaduan: { minZoom: 12, maxZoom: 22 },
   // Default values for other layers
   default: { minZoom: 10, maxZoom: 22 }
