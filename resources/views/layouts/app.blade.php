@@ -79,9 +79,9 @@
                 </svg>
             </button>
 
-            <!-- Profile Dropdown -->
+            <!-- Profile Dropdown (desktop) — di mobile sudah ada tab Akun -->
             @auth
-            <div class="relative items-center gap-3 border-l border-white/20 pl-5 ml-1 flex" id="profileContainer">
+            <div class="relative items-center gap-3 border-l border-white/20 pl-5 ml-1 hidden md:flex" id="profileContainer">
                 <div class="text-right hidden sm:block">
                     <p class="text-[10px] font-black text-white uppercase leading-none tracking-tight">{{ Auth::user()->username }}</p>
                     <p class="text-[8px] text-blue-200 font-black uppercase tracking-[0.1em] mt-0.5">Admin Server</p>
@@ -92,9 +92,14 @@
                     </div>
                     <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
                 </button>
+            </div>
+            @endauth
+        </div>
+    </header>
 
-                <!-- Dropdown Menu -->
-                <div id="profileDropdown" class="absolute top-full right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden hidden transform origin-top-right transition-all duration-200 z-[100] opacity-0 scale-95">
+    @auth
+    {{-- Dropdown profil dipakai desktop (dropdown) dan mobile (bottom sheet) --}}
+<div id="profileDropdown" class="hidden md:absolute md:top-full right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden transform origin-top-right transition-all duration-200 z-[100] opacity-0 scale-95">
                     <div class="p-4 bg-slate-50 border-b border-slate-100">
                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Akun Terhubung</p>
                         <p class="text-xs font-black text-slate-800 truncate">{{ Auth::user()->username }}</p>
@@ -118,10 +123,7 @@
                         </a>
                     </div>
                 </div>
-            </div>
-            @endauth
-        </div>
-    </header>
+    @endauth
 
     <!-- Mobile Search Bar (Expandable) -->
     <div id="mobileSearchContainer" class="hidden bg-blue-700/95 backdrop-blur-md flex items-center px-4 z-40 transition-all duration-300">
