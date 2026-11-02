@@ -1,5 +1,5 @@
 import './bootstrap';
-import { initMap } from './gis/map.js';
+import { initMap, setupMapZoomHandler } from './gis/map.js';
 import { initLayers } from './gis/layers.js';
 import { initFilters } from './gis/filters.js';
 import { initControls } from './gis/controls.js';
@@ -32,6 +32,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Initialize filters
         initFilters(map, layerGroups);
+
+        // Aktifkan pengelola zoom-level layer (sebelumnya didefinisikan tapi
+        // tidak pernah dipanggil, jadi layer di bawah minZoom tetap dirender)
+        setupMapZoomHandler(map, layerGroups);
 
         // Initialize Search Feature
         initSearch(map);

@@ -1,14 +1,25 @@
 <?php
 
 return [
-    'geoserver_url' => env('GIS_GEOSERVER_URL', 'http://36.93.220.245:8080/geoserver/webgis/wms'),
-    'geoserver_wfs_url' => env('GIS_GEOSERVER_WFS_URL', 'http://36.93.220.245:8080/geoserver/webgis/ows'),
+    /*
+    | URL GeoServer. Tanpa nilai default ber-IP: kalau .env lupa diisi,
+    | aplikasi harus gagal jelas, bukan diam-diam menembak server produksi.
+    */
+    'geoserver_url' => env('GIS_GEOSERVER_URL'),
+    'geoserver_wfs_url' => env('GIS_GEOSERVER_WFS_URL'),
+
+    /*
+    | Verifikasi sertifikat TLS ke GeoServer. Hanya set false bila upstream
+    | memakai sertifikat self-signed DAN jaringan internal tepercaya.
+    */
+    'geoserver_verify_tls' => env('GIS_GEOSERVER_VERIFY_TLS', true),
+
     'default_lat' => env('GIS_DEFAULT_LAT', -7.385735),
     'default_lng' => env('GIS_DEFAULT_LNG', 109.360430),
     'default_zoom' => env('GIS_DEFAULT_ZOOM', 11),
-    
+
     'pipe_sizes' => [400, 300, 250, 200, 150, 100, 75, 65, 50, 40, 25, 20, 15],
-    
+
     'accessories' => [
         'all_airvalve' => 'Air Valve',
         'all_bend' => 'Bend',
@@ -22,6 +33,6 @@ return [
         'all_strainer' => 'Strainer',
         'all_tee' => 'Tee',
         'all_titik_tekanan' => 'Titik Tekanan',
-        'all_washout1' => 'Washout'
+        'all_washout1' => 'Washout',
     ],
 ];

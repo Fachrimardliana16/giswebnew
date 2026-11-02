@@ -238,8 +238,7 @@ $accessories = config('gis.accessories', []);
             </x-gis.sidebar.section>
 
             @php
-                $allowedAdmins = ['fachri', 'kholiq', 'aulia'];
-                $isSuperAdmin = auth()->check() && in_array(auth()->user()->username, $allowedAdmins);
+                $isSuperAdmin = auth()->check() && auth()->user()->isAdmin();
             @endphp
 
             @if($isSuperAdmin)

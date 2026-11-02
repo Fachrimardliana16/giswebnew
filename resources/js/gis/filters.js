@@ -1,4 +1,3 @@
-import { eventManager } from './eventManager.js';
 import { formatRayonFilter } from './helpers.js';
 
 /**

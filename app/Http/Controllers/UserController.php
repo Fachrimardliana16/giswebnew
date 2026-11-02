@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Models\Role;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
@@ -19,26 +20,26 @@ class UserController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('username', 'like', '%' . $request->search . '%')
-                  ->orWhere('name', 'like', '%' . $request->search . '%');
+            $search = str_replace(['%', '_'], ['\%', '\_'], (string) $request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('username', 'like', "%{$search}%")
+                    ->orWhere('name', 'like', "%{$search}%");
             });
         }
 
         $sortBy = $request->get('sort', 'name');
         $order = $request->get('order', 'asc');
-        
-        // Validate sort columns to prevent SQL injection
-        if (!in_array($sortBy, ['name', 'username', 'created_at'])) {
+
+        if (! in_array($sortBy, ['name', 'username', 'created_at'], true)) {
             $sortBy = 'name';
         }
-        
-        if (!in_array($order, ['asc', 'desc'])) {
+
+        if (! in_array($order, ['asc', 'desc'], true)) {
             $order = 'asc';
         }
 
-        $users = $query->orderBy($sortBy, $order)->paginate(15);
-        $roles = Role::all();
+        $users = $query->orderBy($sortBy, $order)->paginate(15)->withQueryString();
+        $roles = Role::orderBy('name')->get();
 
         return view('dashboard.users.index', compact('users', 'roles'));
     }
@@ -48,12 +49,12 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
             'username' => 'required|string|max:255|unique:users',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string|min:8',
             'role_id' => 'required|exists:roles,id',
         ]);
 
         User::create([
-            'name' => $validated['name'],
+            'name' => $validated['name'] ?? null,
             'username' => $validated['username'],
             'password' => Hash::make($validated['password']),
             'role_id' => $validated['role_id'],
@@ -68,17 +69,22 @@ class UserController extends Controller
             'name' => 'nullable|string|max:255',
             'username' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
             'role_id' => 'required|exists:roles,id',
-            'password' => 'nullable|string|min:6',
+            'password' => 'nullable|string|min:8',
         ]);
 
+        // Jangan biarkan admin mencabut hak admin terakhir di sistem.
+        if ((int) $validated['role_id'] !== (int) $user->role_id && $this->isLastAdmin($user)) {
+            return back()->with('error', 'Tidak dapat mengubah role admin terakhir.');
+        }
+
         $data = [
-            'name' => $validated['name'],
+            'name' => $validated['name'] ?? null,
             'username' => $validated['username'],
             'role_id' => $validated['role_id'],
         ];
 
         if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->password);
+            $data['password'] = Hash::make($validated['password']);
         }
 
         $user->update($data);
@@ -88,38 +94,59 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        // Avoid self-deletion if needed, but for now simple delete
+        if ($this->isSelf($user)) {
+            return back()->with('error', 'Anda tidak dapat menghapus akun sendiri.');
+        }
+
+        if ($this->isLastAdmin($user)) {
+            return back()->with('error', 'Tidak dapat menghapus admin terakhir.');
+        }
+
         $user->delete();
+
         return back()->with('success', 'User berhasil dihapus.');
     }
 
     public function bulkDestroy(Request $request)
     {
-        $ids = $request->input('ids', []);
-        
-        if (empty($ids)) {
-            return back()->with('error', 'Tidak ada user yang dipilih.');
-        }
+        $ids = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer',
+        ])['ids'];
 
-        // Security: Don't delete current user or predefined admins
-        $protectedUsernames = ['fachri', 'kholiq', 'aulia'];
-        $currentUser = auth()->user();
+        $currentUser = $request->user();
 
         $usersToDelete = User::whereIn('id', $ids)
-            ->where('id', '!=', $currentUser->id)
-            ->whereNotIn('username', $protectedUsernames)
-            ->get();
+            ->whereKeyNot($currentUser->getKey())
+            ->get()
+            ->reject(fn (User $user) => $this->isLastAdmin($user));
 
         $count = $usersToDelete->count();
-        
+
         foreach ($usersToDelete as $user) {
             $user->delete();
         }
 
         if ($count === 0) {
-            return back()->with('error', 'Tidak ada user yang dapat dihapus (User dilindungi atau Anda sendiri).');
+            return back()->with('error', 'Tidak ada user yang dapat dihapus (akun sendiri atau admin terakhir).');
         }
 
-        return back()->with('success', "$count User berhasil dihapus secara massal.");
+        return back()->with('success', "{$count} User berhasil dihapus secara massal.");
+    }
+
+    private function isSelf(User $user): bool
+    {
+        return Auth::id() === $user->getKey();
+    }
+
+    private function isLastAdmin(User $user): bool
+    {
+        if (! $user->isAdmin()) {
+            return false;
+        }
+
+        return User::whereHas('role', fn ($q) => $q->where('name', 'admin'))
+            ->whereKeyNot($user->getKey())
+            ->doesntExist();
     }
 }

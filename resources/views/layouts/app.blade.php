@@ -13,13 +13,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;801&display=swap" rel="stylesheet">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
-    <!-- Leaflet JS (In Head for proper order) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-    
+
+    {{-- Leaflet hanya dibutuhkan halaman ber-peta; dimuat lewat @push('styles')
+         di dashboard.blade.php supaya halaman admin tidak menanggung ~150 KB. --}}
+
     @stack('styles')
 </head>
 <body class="bg-slate-50 h-screen overflow-hidden flex flex-col antialiased text-slate-900" style="font-family: 'Plus Jakarta Sans', sans-serif;">
@@ -29,7 +28,7 @@
     <header class="bg-glass-blue border-b border-blue-400/30 h-16 flex items-center justify-between px-6 z-50 sticky top-0 shadow-premium">
         <!-- Logo & Toggle -->
         <div class="flex items-center gap-4">
-            <button id="sidebarToggle" class="p-2.5 rounded-2xl text-white bg-white/10 md:hidden hover:bg-white hover:text-blue-600 transition-all border border-white/20 shadow-sm shadow-blue-500/10">
+            <button id="sidebarToggle" aria-label="Buka menu navigasi" aria-controls="sidebar" class="p-2.5 rounded-2xl text-white bg-white/10 md:hidden hover:bg-white hover:text-blue-600 transition-all border border-white/20 shadow-sm shadow-blue-500/10">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
@@ -57,7 +56,7 @@
                     </div>
                     <input type="text" id="customerSearchInput" placeholder="Cari Pelanggan atau Nomor Langganan..." class="w-full bg-slate-100/50 border border-transparent text-slate-700 text-xs font-bold rounded-2xl pl-11 pr-32 py-3.5 focus:bg-white focus:ring-8 focus:ring-blue-500/5 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 shadow-sm border-slate-200/60 transition-all duration-300">
                     <div class="absolute inset-y-0 right-0 flex items-center pr-2 gap-1.5">
-                        <button id="clearSearch" class="p-2 text-slate-300 hover:text-red-500 hidden transition-colors">
+                        <button id="clearSearch" aria-label="Bersihkan pencarian" class="p-2 text-slate-300 hover:text-red-500 hidden transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
@@ -68,7 +67,7 @@
             </div>
             
             <!-- Mobile Search Toggle -->
-            <button id="mobileSearchToggle" class="md:hidden p-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all">
+            <button id="mobileSearchToggle" aria-label="Buka pencarian" aria-controls="mobileSearchContainer" class="md:hidden p-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
