@@ -23,8 +23,10 @@ function terapkanFilterSheet(mode) {
     if (!sheet) return;
 
     const map = {
-        pelanggan: ['pelanggan', 'jaringan'],
-        pipa: ['jaringan_pipa', 'aksesoris'],
+        pelanggan: ['pelanggan'],
+        pengaduan: ['jaringan'],
+        jaringan: ['jaringan_pipa'],
+        aksesoris: ['aksesoris'],
     };
     const tampil = map[mode] || null;
 
@@ -85,7 +87,9 @@ export function bukaSheet(mode = null) {
 
     const judul = {
         pelanggan: ['Data Pelanggan', 'Filter & tampilkan data pelanggan'],
-        pipa: ['Jaringan & Asesoris', 'Pilih pipa, sumber air, dan asesoris'],
+        pengaduan: ['Pengaduan Pelanggan', 'Data laporan & status pengaduan'],
+        jaringan: ['Jaringan Pipa', 'Filter pipa berdasarkan material & wilayah'],
+        aksesoris: ['Aksesoris Jaringan', 'Air valve, gate valve, dan lainnya'],
     };
     const t = mode && judul[mode] ? judul[mode] : ['Layer', 'Pilih data yang ingin ditampilkan'];
     const elJudul = document.getElementById('sheetTitle');
@@ -324,12 +328,12 @@ function searchHeader() {
 
 function pantauBadge() {
     const hitung = () => {
-        const pelanggan = document.querySelectorAll(
-            '.pelanggan-checkbox:checked, .pengduan-checkbox:checked'
+        const pelanggan = document.querySelectorAll('.pelanggan-checkbox:checked').length;
+        const pengaduan = document.querySelectorAll('.pengduan-checkbox:checked').length;
+        const jaringan = document.querySelectorAll(
+            '.pipa-checkbox:checked, .pipa-sumberma-checkbox:checked'
         ).length;
-        const pipa = document.querySelectorAll(
-            '.pipa-checkbox:checked, .pipa-sumberma-checkbox:checked, .aksesoris-checkbox:checked'
-        ).length;
+        const aksesoris = document.querySelectorAll('.aksesoris-checkbox:checked').length;
 
         const set = (nama, n) => {
             const b = document.querySelector(`[data-badge="${nama}"]`);
@@ -338,7 +342,9 @@ function pantauBadge() {
             b.dataset.show = n > 0 ? '1' : '0';
         };
         set('pelanggan', pelanggan);
-        set('pipa', pipa);
+        set('pengaduan', pengaduan);
+        set('jaringan', jaringan);
+        set('aksesoris', aksesoris);
     };
 
     document.addEventListener('change', (e) => {
@@ -389,19 +395,31 @@ export function initMobileApp() {
         });
     });
 
-    // Tab Akun -> profil bottom sheet
-    document.querySelectorAll('[data-profile-open]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+    // Tombol akun di HEADER (bukan lagi di bottom nav)
+    const akunBtn = document.getElementById('mobileAkunToggle');
+    if (akunBtn) {
+        akunBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             tutupSheet();
-            setTabAktif('akun');
-            setTimeout(() => {
-                const pt = document.getElementById('profileToggle');
-                const pd = document.getElementById('profileDropdown');
-                if (pt && pd && pd.classList.contains('hidden')) pt.click();
-            }, 180);
+            const pd = document.getElementById('profileDropdown');
+            const pt = document.getElementById('profileToggle');
+            if (!pd || !pt) return;
+
+            if (pd.classList.contains('hidden')) {
+                // buka langsung: hindari click-outside menutup lagi
+                pd.classList.remove('hidden', 'opacity-0', 'scale-95');
+                pd.classList.add('opacity-100', 'scale-100');
+                akunBtn.setAttribute('aria-expanded', 'true');
+                document.body.classList.add('akun-terbuka');
+            } else {
+                pd.classList.add('hidden', 'opacity-0', 'scale-95');
+                pd.classList.remove('opacity-100', 'scale-100');
+                akunBtn.setAttribute('aria-expanded', 'false');
+                document.body.classList.remove('akun-terbuka');
+            }
         });
-    });
+    }
 
     const backdrop = getBackdrop();
     if (backdrop) backdrop.addEventListener('click', () => {

@@ -72,12 +72,19 @@
                 </div>
             </div>
             
-            <!-- Mobile: ikon cari di header (menggantikan posisi profil lama) -->
+            <!-- Mobile: ikon cari + akun di header (menggantikan posisi profil lama) -->
             <button id="mobileSearchToggle" aria-label="Buka pencarian" aria-controls="mobileHeaderSearch" aria-expanded="false" class="md:hidden p-2.5 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
             </button>
+            @auth
+            <button id="mobileAkunToggle" aria-label="Buka menu akun" aria-haspopup="true" aria-expanded="false" class="md:hidden p-1 text-white/90 hover:text-white transition-all">
+                <span class="w-9 h-9 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center text-white text-xs font-black">
+                    {{ strtoupper(substr(Auth::user()->username, 0, 1)) }}
+                </span>
+            </button>
+            @endauth
 
             <!-- Profile Dropdown (desktop) — di mobile sudah ada tab Akun -->
             @auth
