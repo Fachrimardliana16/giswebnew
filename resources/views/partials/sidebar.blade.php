@@ -18,13 +18,14 @@ $accessories = config('gis.accessories', []);
         </div>
         <button type="button" class="sidebar-sheet__close" data-sheet-close
                 aria-label="Tutup panel" title="Tutup">
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                <path d="M7 7l10 10M17 7L7 17"></path>
             </svg>
         </button>
     </div>
+    <div class="sidebar-sheet__head-line" aria-hidden="true"></div>
 
-    <div class="flex-grow overflow-y-auto px-4 py-8 custom-scrollbar">
+    <div class="sidebar-sheet__isi flex-grow overflow-y-auto px-4 py-8 custom-scrollbar">
 
         <div class="px-2 mb-4 mt-4">
             <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] flex items-center gap-2">

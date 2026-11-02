@@ -1,0 +1,31 @@
+style(mobile): rapikan header sheet & tombol close tanpa bingkai
+
+1. Tombol close di search: bingkai dihilangkan.
+   Sebelum: kotak abu-abu 28x28 border-radius 8px, dan karena aturan
+   min-height global 44px tombol jadi lonjong (26x44).
+   Sesudah: lingkaran 26x26, background transparan, tanpa border,
+   warna ikon lembut, hover/aktif baru memunculkan latar halus.
+   Terukur: w=26 h=26 bulat=true border=0px bg=transparan.
+
+2. Header sheet (Pelanggan/Pengaduan/Jaringan/Aksesoris) dirapikan:
+   - Panel sheet jadi putih solid (sebelumnya bg-glass tembus pandang,
+     membuat header putih terlihat tidak menyatu)
+   - Header putih solid, padding asimetris 6/14/12/18, judul 17px
+     letter-spacing -0.022em, subjudul 11.5px warna #8b98ab
+   - Garis aksen gradient biru 3px di bawah header
+   - Tombol close: lingkaran 34x34 tanpa border, background #f1f5f9,
+     ikon 17px stroke 2.2
+   - Gagang dibuat lebih halus (40x4, #d7dee8)
+
+3. Bug CSS diperbaiki: area isi sheet sebelumnya dipilih lewat
+   ":nth-child(3)/:nth-child(4)". Saat garis aksen ditambahkan sebagai
+   anak ke-3, aturan itu mengenai garis sehingga tingginya jadi 30px
+   (bukan 3px) dan ikut mendapat flex:1 1 auto.
+   Sekarang area isi memakai class eksplisit .sidebar-sheet__isi,
+   tidak lagi bergantung urutan anak.
+
+Terukur (mobile 390) keempat tab: header 59px, garis 3px, close 34x34,
+area isi 662px dan tetap bisa scroll; tombol close menutup sheet,
+tombol clear mengosongkan input.
+Desktop 1440 tidak berubah (sidebar 302px, head/garis display none).
+PHPUnit 39 passed.
