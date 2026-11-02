@@ -1,0 +1,24 @@
+fix(search): kotak saran terpotong oleh panel header
+
+Penyebab terukur: panel .mobile-header-search memakai overflow:hidden
+dengan max-height:78px, sedangkan kotak saran butuh ~225px. Akibatnya
+saran terpotong dan hanya menyisakan ~1 baris yang terlihat.
+Sebelum: panel saran top=118 bottom=343 (h=225) tapi parent memotong di
+78px (overflow hidden, maxHeight 78px).
+
+Perbaikan:
+- .mobile-header-search[data-open="1"] -> overflow:visible
+  (animasi tinggi tetap pada max-height form, bukan isinya)
+- z-index panel dinaikkan 55 -> 90 agar di atas FAB (65) dan peta
+- #mobileSuggest diposisikan absolute di bawah form
+  (top: calc(100% + 6px), left/right 12px, z-index 95,
+  max-height min(52vh,330px)) sehingga melayang keluar panel
+
+Terukur sesudah:
+- desktop 1440: 4/4 saran terlihat penuh, panel di dalam layar
+- mobile 390  : 4/4 terlihat penuh, panel top=128 bottom=353
+- mobile 360  : 4/4 terlihat penuh
+- keempat item bisa diklik (elementFromPoint = item itu sendiri)
+- memilih saran ke-2 -> panel tertutup, popup HERLAN SUPRIYANTO muncul
+
+PHPUnit 39 passed.

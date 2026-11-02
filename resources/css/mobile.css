@@ -297,7 +297,9 @@
 }
 
 /* ---------- Search di header (panel meluncur, bukan overlay peta) ----------
-   Default tertutup. Dibuka dari ikon cari di header atau tab Cari. */
+   Default tertutup. Dibuka dari ikon cari di header atau tab Cari.
+   PENTING: overflow harus visible supaya kotak saran bisa keluar dari panel;
+   yang dianimasikan hanya tinggi form, bukan seluruh panel. */
 .mobile-header-search {
     display: none;
     background: #1d4ed8;
@@ -307,7 +309,7 @@
     overflow: hidden;
     transition: max-height 0.24s cubic-bezier(0.32, 0.72, 0, 1), padding 0.24s ease;
     position: relative;
-    z-index: 55;
+    z-index: 90;          /* di atas FAB & peta */
 }
 
 @media (max-width: 767px) {
@@ -315,9 +317,11 @@
         display: block;
     }
 
+    /* Tinggi cukup untuk form; saran memakai posisi absolute keluar panel */
     .mobile-header-search[data-open="1"] {
         max-height: 78px;
         padding: 10px 12px 12px;
+        overflow: visible;
     }
 }
 
