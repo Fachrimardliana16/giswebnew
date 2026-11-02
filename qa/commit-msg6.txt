@@ -1,0 +1,38 @@
+perf: bersihkan CVE npm, test role, lazy layer, pemilih fitur hemat request
+
+Prioritas 1a - CVE npm: 12 (2 critical, 7 high) -> 0
+  npm update memperbaiki concurrently/shell-quote (critical), axios (high),
+  postcss, vite, browserslist, form-data, nanoid, source-map-js,
+  baseline-browser-mapping, follow-redirects, postcss-selector-parser.
+  composer audit tetap 0.
+
+Prioritas 1b - RoleController kini punya test (0 -> 16 test):
+  RoleManagementTest mencakup daftar role, penolakan non-admin, buat/ubah
+  role, validasi nama unik & wajib, permission sebagai array, hapus role
+  yang masih dipakai (ditolak), hapus role kosong, bulk delete yang
+  melewati role terpakai, sort injection, hitung users_count, dan
+  role ber-permission manajemen_user dianggap admin.
+  Sekalian perbaiki RoleController::bulkDestroy: `ids` kini divalidasi
+  required|array|ids.*|integer (sebelumnya input mentah).
+  Total suite: 39 -> 55 test, 127 assertion.
+
+Prioritas 2d - Lazy layer:
+  layers.js memakai Proxy: 17 layer tidak lagi dibuat saat load, hanya
+  saat benar-benar diakses (dicentang/difilter). Object.keys()/for-in
+  TIDAK memicu pembuatan (itu sebabnya Proxy, bukan getter enumerable).
+  featureInfo & map.js tidak lagi menyentuh layer yang belum dibuat.
+  Terukur: 0 request GetMap saat load (sebelumnya semua layer dibuat),
+  lalu 12 tile per layer yang diaktifkan.
+
+Prioritas 2e - Pemilih fitur hemat request:
+  Sebelumnya 3x3 titik x N layer GetFeatureInfo (5 layer = 45 request).
+  Sekarang layer titik diambil lewat WFS GetFeature dengan BBOX kecil.
+  CATATAN terukur: GeoServer menolak typeName multi-layer dalam satu
+  GetFeature (ServiceException), jadi dipakai satu request per layer
+  titik, dijalankan paralel. Layer garis tetap GetFeatureInfo.
+  Terukur: 5 layer aktif -> 4 request (dari 45), pemilih muncul dengan
+  3 titik bertumpuk (HARDIMAN, UTAMI BUDIANTI x2), memilih salah satu
+  menampilkan detailnya.
+
+Regresi: accordion & GetFeatureInfo tetap jalan, PHPUnit 55 passed,
+composer & npm audit bersih.

@@ -180,6 +180,9 @@ export const setupMapZoomHandler = (map, layers) => {
 
     document.querySelectorAll('.layer-checkbox:checked').forEach(checkbox => {
       const layerId = checkbox.id;
+      // jangan buat layer yang belum pernah dipakai
+      if (typeof layers.__sudahDibuat === 'function' && !layers.__sudahDibuat(layerId)) return;
+
       const layer = layers[layerId];
       if (!layer) return;
 

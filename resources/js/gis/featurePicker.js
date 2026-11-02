@@ -1,109 +1,114 @@
 /**
- * Pemilih fitur bertumpuk.
+ * Pemilih fitur bertumpuk — versi 1 request WFS.
  *
- * Masalah: saat beberapa titik berdekatan, klik hanya mengambil fitur
- * pertama dari layer pertama, sisanya tak bisa dipilih.
+ * Versi lama memindai 3x3 titik × setiap layer aktif = 9 x N request
+ * GetFeatureInfo (5 layer aktif = 45 request per klik).
  *
- * Solusi dua lapis:
- *  1. Klik tunggal -> kumpulkan SEMUA fitur dalam radius piksel dari semua
- *     layer aktif. Jika >1, tampilkan daftar pilihan.
- *  2. Setelah daftar terbuka, klik salah satu item -> popup detail fitur itu.
+ * Sekarang: satu request WFS GetFeature dengan BBOX kecil di sekitar klik,
+ * meminta SEMUA layer titik sekaligus (typeName dipisah koma). Hasilnya
+ * dikelompokkan menjadi kandidat, jadi jumlah request tetap 1.
+ *
+ * Layer garis (pipa) tetap memakai GetFeatureInfo karena BBOX akan
+ * mengembalikan terlalu banyak fitur.
  */
 
-import { renderFeaturePopup } from './popupUI.js';
+import { GEOSERVER_WFS_URL } from './config.js';
 
-const RADIUS_PIKSEL = 14;   // toleransi klik (px)
+const PX_BBOX = 18;        // setengah lebar kotak pencarian (px)
+const MAKS_FITUR = 30;
+
+const escape = (s) => String(s).replace(/[<>&"']/g, '');
 
 /**
- * Ambil fitur di sekitar titik klik dari satu layer WMS.
- * Layer titik (analisa_pelanggan, asesoris) memakai GetFeatureInfo;
- * untuk layer garis (pipa) hanya titik yang benar-benar kena yang muncul.
+ * Layer titik yang punya padanan WFS (dengan nama tabel sama).
  */
-export async function ambilFiturSekitar(map, layer, layerId, latlng, radius = RADIUS_PIKSEL) {
-    if (!layer || !layer.wmsParams) return [];
+export const LAYER_WFS = {
+    analisa_pelanggan: 'analisa_pelanggan',
+    monitoring_pengaduan: 'monitoring_pengaduan',
+    all_airvalve: 'all_airvalve',
+    all_bend: 'all_bend',
+    all_checkvalve: 'all_checkvalve',
+    all_dop: 'all_dop',
+    all_firehydrant: 'all_firehydrant',
+    all_gatevalve: 'all_gatevalve',
+    all_meterinduk: 'all_meterinduk',
+    all_prv: 'all_prv',
+    all_reducer: 'all_reducer',
+    all_strainer: 'all_strainer',
+    all_tee: 'all_tee',
+    all_titik_tekanan: 'all_titik_tekanan',
+    all_washout: 'all_washout',
+};
 
-    const size = map.getSize();
-    const point = map.latLngToContainerPoint(latlng);
+/**
+ * Ambil fitur di sekitar satu titik lewat WFS.
+ *
+ * CATATAN PENTING (terukur): GeoServer menolak `typeName` multi-layer dalam
+ * satu GetFeature (ServiceException), tetapi menerima `bbox` dengan satu
+ * typeName. Jadi dipakai satu request PER layer titik — tetap jauh lebih
+ * hemat daripada 9 request GetFeatureInfo per layer.
+ */
+export async function ambilFiturSekitarWfs(map, layerIds, latlng) {
+    const titik = layerIds.filter(id => LAYER_WFS[id]);
+    if (!titik.length) return [];
 
-    const params = {
-        request: 'GetFeatureInfo',
-        service: 'WMS',
-        srs: 'EPSG:4326',
-        styles: layer.wmsParams.styles || '',
-        transparent: layer.wmsParams.transparent,
-        version: layer.wmsParams.version,
-        format: layer.wmsParams.format,
-        bbox: map.getBounds().toBBoxString(),
-        height: size.y,
-        width: size.x,
-        layers: layer.wmsParams.layers,
-        query_layers: layer.wmsParams.layers,
-        info_format: 'application/json',
-    };
+    // BBOX kecil di sekitar klik: offset piksel -> derajat
+    const pusat = map.latLngToContainerPoint(latlng);
+    const p1 = map.containerPointToLatLng(pusat.subtract([PX_BBOX, PX_BBOX]));
+    const p2 = map.containerPointToLatLng(pusat.add([PX_BBOX, PX_BBOX]));
 
-    if (layer.wmsParams.cql_filter) {
-        params.cql_filter = layer.wmsParams.cql_filter;
-    }
+    const bbox = [
+        Math.min(p1.lng, p2.lng),
+        Math.min(p1.lat, p2.lat),
+        Math.max(p1.lng, p2.lng),
+        Math.max(p1.lat, p2.lat),
+    ].join(',');
 
-    // Kumpulkan beberapa titik klik di sekitar jari/mouse
-    const offsets = [[0, 0], [-radius, 0], [radius, 0], [0, -radius], [0, radius],
-                     [-radius, -radius], [radius, -radius], [-radius, radius], [radius, radius]];
-
-    const hasil = [];
-    const terlihat = new Set();
-
-    for (const [dx, dy] of offsets) {
-        const x = Math.round(point.x + dx);
-        const y = Math.round(point.y + dy);
-
-        if (x < 0 || y < 0 || x > size.x || y > size.y) continue;
-
-        const url = layer._url
-            ? layer._url + L.Util.getParamString({ ...params, x, y }, layer._url, true)
-            : null;
-        if (!url) continue;
+    const permintaan = titik.map(async (layerId) => {
+        const params = new URLSearchParams({
+            service: 'WFS',
+            version: '1.0.0',
+            request: 'GetFeature',
+            typeName: `webgis:${LAYER_WFS[layerId]}`,
+            outputFormat: 'application/json',
+            maxFeatures: String(MAKS_FITUR),
+            bbox,
+        });
 
         try {
-            const res = await fetch(url);
-            if (!res.ok) continue;
+            const res = await fetch(`${GEOSERVER_WFS_URL}?${params.toString()}`);
+            if (!res.ok) return [];
             const data = await res.json();
 
-            (data.features || []).forEach(f => {
-                const p = f.properties || {};
-                // kunci unik: id fitur atau gabungan nolang/nama
-                const kunci = f.id || p.nolang || p.nama || JSON.stringify(p).slice(0, 60);
-                if (terlihat.has(kunci)) return;
-                terlihat.add(kunci);
-
-                hasil.push({
+            return (data.features || []).map(f => {
+                const g = f.geometry;
+                let jarak = 0;
+                if (g && g.type === 'Point' && g.coordinates) {
+                    jarak = map.distance(latlng, L.latLng(g.coordinates[1], g.coordinates[0]));
+                }
+                return {
                     layerId,
-                    namaLayer: (layer.wmsParams.layers || '').replace('webgis:', ''),
+                    namaLayer: LAYER_WFS[layerId],
                     fitur: f,
-                    jarak: Math.hypot(dx, dy),
-                });
+                    jarak,
+                };
             });
         } catch (e) {
-            // diamkan: layer ini saja yang gagal
+            console.error(`WFS ${layerId} gagal:`, e);
+            return [];
         }
+    });
 
-        // cukup 1 titik pusat bila sudah dapat banyak
-        if (hasil.length > 12) break;
-    }
-
-    return hasil;
+    // jalankan paralel, bukan berurutan
+    const hasil = (await Promise.all(permintaan)).flat();
+    return hasil.sort((a, b) => a.jarak - b.jarak);
 }
 
 /**
- * Tampilkan daftar pilihan fitur yang bertumpuk.
- * @param {Object} map
- * @param {Array} kandidat hasil ambilFiturSekitar
- * @param {L.LatLng} latlng titik klik
- * @param {Function} onPilih callback(fitur, layerId)
+ * Tampilkan daftar pilihan fitur bertumpuk.
  */
 export function tampilkanPemilih(map, kandidat, latlng, onPilih) {
     if (!kandidat.length) return null;
-
-    // urutkan: titik terdekat dulu
     kandidat.sort((a, b) => a.jarak - b.jarak);
 
     const ikonLayer = (id) => {
@@ -115,7 +120,9 @@ export function tampilkanPemilih(map, kandidat, latlng, onPilih) {
     const itemHTML = kandidat.slice(0, 20).map((k, i) => {
         const p = k.fitur.properties || {};
         const judul = p.nama || p.NAMA || p.nolang || k.namaLayer;
-        const sub = p.nolang ? `No. Langganan ${p.nolang}` : (p.alamat || k.namaLayer);
+        const sub = p.nolang
+            ? `No. Langganan ${p.nolang}`
+            : (p.alamat || k.namaLayer.replace(/_/g, ' '));
         return `
         <button type="button" class="fpick__item" data-idx="${i}">
             <span class="fpick__ikon">
@@ -124,8 +131,8 @@ export function tampilkanPemilih(map, kandidat, latlng, onPilih) {
                 </svg>
             </span>
             <span class="fpick__teks">
-                <span class="fpick__judul">${String(judul).replace(/[<>&]/g, '')}</span>
-                <span class="fpick__sub">${String(sub).replace(/[<>&]/g, '')}</span>
+                <span class="fpick__judul">${escape(judul)}</span>
+                <span class="fpick__sub">${escape(sub)}</span>
             </span>
             <span class="fpick__panah">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
@@ -154,7 +161,6 @@ export function tampilkanPemilih(map, kandidat, latlng, onPilih) {
         .setContent(html)
         .openOn(map);
 
-    // pasang listener setelah popup masuk DOM
     setTimeout(() => {
         document.querySelectorAll('.fpick__item').forEach(btn => {
             btn.addEventListener('click', () => {

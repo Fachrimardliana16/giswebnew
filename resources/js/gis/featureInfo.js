@@ -1,16 +1,17 @@
 import { GEOSERVER_URL } from './config.js';
 import { renderFeaturePopup } from './popupUI.js';
-import { ambilFiturSekitar, tampilkanPemilih } from './featurePicker.js';
+import { ambilFiturSekitarWfs, tampilkanPemilih, LAYER_WFS } from './featurePicker.js';
 
 /**
  * GetFeatureInfo untuk seluruh layer aktif.
  *
- * Jika pada titik klik ada lebih dari satu fitur (titik bertumpuk),
- * tampilkan daftar pilihan sehingga user bisa memilih salah satunya.
- * Jika hanya satu, langsung tampilkan popup detail.
+ * Optimasi: layer TITIK diambil lewat satu request WFS (BBOX kecil), bukan
+ * 9x GetFeatureInfo per layer. Layer GARIS (pipa) memakai GetFeatureInfo
+ * karena BBOX akan mengembalikan terlalu banyak fitur.
+ *
+ * Jika pada titik klik ada >1 fitur, tampilkan daftar pilihan.
  */
 export function initFeatureInfo(map, layers) {
-    // Prioritas: asesoris > pipa > pengaduan > pelanggan
     const priorityOrder = [
         'all_airvalve', 'all_bend', 'all_checkvalve', 'all_dop', 'all_firehydrant',
         'all_gatevalve', 'all_meterinduk', 'all_prv', 'all_reducer', 'all_strainer',
@@ -25,7 +26,7 @@ export function initFeatureInfo(map, layers) {
     const tampilkanDetail = (k, latlng) => {
         const props = k.fitur.properties || {};
         const judul = props.nama || props.NAMA
-            || k.namaLayer.replace(/_/g, ' ').toUpperCase();
+            || String(k.namaLayer).replace(/_/g, ' ').toUpperCase();
 
         let flat = latlng.lat, flng = latlng.lng;
         const g = k.fitur.geometry;
@@ -39,8 +40,6 @@ export function initFeatureInfo(map, layers) {
             }
         }
 
-        const konten = renderFeaturePopup(judul, props, flat, flng);
-
         L.popup({
             maxWidth: 340,
             minWidth: 300,
@@ -48,37 +47,82 @@ export function initFeatureInfo(map, layers) {
             autoPanPadding: [16, 16],
         })
             .setLatLng(latlng)
-            .setContent(konten)
+            .setContent(renderFeaturePopup(judul, props, flat, flng))
             .openOn(map);
     };
+
+    /** GetFeatureInfo untuk satu layer garis — satu titik saja. */
+    const infoGaris = async (layer, layerId, latlng) => {
+        const size = map.getSize();
+        const point = map.latLngToContainerPoint(latlng);
+        const p = {
+            request: 'GetFeatureInfo', service: 'WMS', srs: 'EPSG:4326',
+            styles: layer.wmsParams.styles || '',
+            transparent: layer.wmsParams.transparent,
+            version: layer.wmsParams.version,
+            format: layer.wmsParams.format,
+            bbox: map.getBounds().toBBoxString(),
+            height: size.y, width: size.x,
+            layers: layer.wmsParams.layers,
+            query_layers: layer.wmsParams.layers,
+            info_format: 'application/json',
+            x: Math.round(point.x), y: Math.round(point.y),
+        };
+        if (layer.wmsParams.cql_filter) p.cql_filter = layer.wmsParams.cql_filter;
+
+        const url = GEOSERVER_URL + L.Util.getParamString(p, GEOSERVER_URL, true);
+        try {
+            const res = await fetch(url);
+            if (!res.ok) return [];
+            const data = await res.json();
+            return (data.features || []).map(f => ({
+                layerId,
+                namaLayer: fiturTabel(f) || layerId,
+                fitur: f,
+                jarak: 0,
+            }));
+        } catch (e) {
+            return [];
+        }
+    };
+
+    const fiturTabel = (f) => String(f.id || '').split('.')[0];
 
     map.on('click', async function (e) {
         if (sedangMemproses) return;
 
-        const aktif = Object.keys(layers).filter(id => map.hasLayer(layers[id]));
+        const aktif = (typeof layers.__daftar === 'function' ? layers.__daftar() : [])
+            .filter(id => layers.__sudahDibuat(id) && map.hasLayer(layers[id]));
         if (!aktif.length) return;
-
-        const urut = aktif.sort((a, b) => {
-            const ia = priorityOrder.indexOf(a);
-            const ib = priorityOrder.indexOf(b);
-            return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
-        });
 
         sedangMemproses = true;
 
         try {
-            // Kumpulkan kandidat dari semua layer aktif (dibatasi agar cepat)
-            const kandidat = [];
-            for (const layerId of urut) {
+            const titikAktif = aktif.filter(id => LAYER_WFS[id]);
+            const garisAktif = aktif.filter(id => !LAYER_WFS[id]);
+
+            // 1 request WFS untuk semua layer titik
+            let kandidat = titikAktif.length
+                ? await ambilFiturSekitarWfs(map, titikAktif, e.latlng)
+                : [];
+
+            // GetFeatureInfo hanya untuk layer garis (pipa)
+            for (const layerId of garisAktif) {
                 const layer = layers[layerId];
                 if (!layer) continue;
-
-                const hasil = await ambilFiturSekitar(map, layer, layerId, e.latlng);
+                const hasil = await infoGaris(layer, layerId, e.latlng);
                 kandidat.push(...hasil);
-
-                // kalau sudah banyak, tidak perlu memeriksa layer prioritas rendah
                 if (kandidat.length >= 8) break;
             }
+
+            // buang duplikat (layer titik bisa muncul dari WFS & GetFeatureInfo)
+            const kunci = new Set();
+            kandidat = kandidat.filter(k => {
+                const id = k.fitur.id || JSON.stringify(k.fitur.properties || {}).slice(0, 60);
+                if (kunci.has(id)) return false;
+                kunci.add(id);
+                return true;
+            });
 
             if (!kandidat.length) return;
 
@@ -87,10 +131,7 @@ export function initFeatureInfo(map, layers) {
                 return;
             }
 
-            // Beberapa fitur bertumpuk -> beri user pilihan
-            tampilkanPemilih(map, kandidat, e.latlng, (k) => {
-                tampilkanDetail(k, e.latlng);
-            });
+            tampilkanPemilih(map, kandidat, e.latlng, (k) => tampilkanDetail(k, e.latlng));
         } catch (err) {
             console.error('FeatureInfo error:', err);
         } finally {

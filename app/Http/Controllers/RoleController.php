@@ -63,7 +63,13 @@ class RoleController extends Controller
 
     public function bulkDestroy(Request $request)
     {
-        $ids = $request->input('ids', []);
+        // ids wajib array of integer: mencegah input aneh (string, nested array)
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer',
+        ]);
+
+        $ids = $request->input('ids');
 
         if (empty($ids)) {
             return back()->with('error', 'Tidak ada role yang dipilih.');
