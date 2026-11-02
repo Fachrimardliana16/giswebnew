@@ -1,0 +1,38 @@
+feat(map): pilih titik bertumpuk, perbaiki peta hilang saat zoom, autocomplete pencarian, auto-zoom layer
+
+1. Titik berdekatan tidak bisa dipilih satu-satu.
+   Dulu GetFeatureInfo hanya mengambil fitur pertama dari layer pertama.
+   Sekarang modul baru featurePicker.js memindai 3x3 titik (radius 14px)
+   di SEMUA layer aktif, mengumpulkan seluruh fitur unik, lalu:
+   - 1 fitur  -> popup detail langsung
+   - >1 fitur -> daftar "N data di titik ini" untuk dipilih
+   Terukur pada pasangan sejauh 8.6e-06 derajat (APOTIK SARTIKA &
+   Dr.SAHID HIDAYAT): pemilih muncul dengan 2 pilihan + nomor langganan,
+   memilih item ke-2 menampilkan detail Dr.SAHID HIDAYAT.
+
+2. Peta hilang saat zoom penuh.
+   Penyebab: map.maxZoom 22 tetapi basemap OSM hanya punya tile sampai
+   zoom 19 dan Google 21, sehingga di atas itu latar kosong dan hanya
+   layer WMS transparan yang tersisa.
+   Perbaikan: map maxZoom 20, maxNativeZoom 19/21 pada basemap.
+   Sekalian setupMapZoomHandler tidak lagi memanggil removeLayer saat
+   zoom di luar rentang (layer jadi hilang permanen); kini hanya
+   menurunkan opacity sehingga muncul lagi saat zoom kembali.
+   Terukur: zoom 18 dan 20 -> tile termuat penuh (belum_muat=0), WMS aktif.
+
+3. Autocomplete pencarian.
+   Modul baru searchSuggest.js: mengetik >=2 karakter memunculkan saran
+   nama + nomor langganan + alamat/cabang, cocok untuk nama maupun nolang,
+   dengan sorotan kata dan navigasi keyboard (panah + Enter).
+   Terpasang di header mobile dan search bar desktop.
+   Terukur: ketik "herlan" -> 4 saran (SUHERLAN/08040068,
+   HERLAN SUPRIYANTO/22010141, HERLAN GALIH PAMUNGKAS/13100017,
+   RUDI SUHERLAN/02010306); ketik "0101" -> 8 saran nolang;
+   memilih saran memunculkan popup detail pelanggan tsb.
+
+4. Peringatan zoom saat layer baru diaktifkan.
+   Ditambah sesuaikanZoomUntukLayer(): bila zoom sekarang di bawah
+   minZoom layer, peta otomatis flyTo ke level yang dibutuhkan.
+   Terukur: zoom 10 -> aktifkan layer gate valve -> zoom jadi 12.
+
+Verifikasi: PHPUnit 39 passed. Desktop 1440 tidak berubah.

@@ -9,6 +9,7 @@ import { initFeatureInfo } from './gis/featureInfo.js';
 import { showToast } from './gis/toast.js';
 import { initLoadingWatchdog } from './gis/loadingWatchdog.js';
 import { initMobileApp } from './gis/mobileApp.js';
+import { initSearchSuggest } from './gis/searchSuggest.js';
 
 /**
  * Initialize the application when DOM is ready.
@@ -47,6 +48,27 @@ async function boot() {
 
         // Initialize Search Feature
         initSearch(map);
+
+        // Saran pencarian (autocomplete) di header desktop & mobile.
+        // Memilih saran -> langsung jalankan pencarian titik itu.
+        const jalankanCari = (input) => {
+            const btn = input.id === 'mobileFloatSearch'
+                ? document.getElementById('mobileFloatSearchBtn')
+                : document.getElementById('searchButton');
+            if (btn) btn.click();
+        };
+
+        initSearchSuggest(
+            document.getElementById('customerSearchInput'),
+            document.getElementById('desktopSuggest'),
+            () => jalankanCari(document.getElementById('customerSearchInput')),
+        );
+
+        initSearchSuggest(
+            document.getElementById('mobileFloatSearch'),
+            document.getElementById('mobileSuggest'),
+            () => jalankanCari(document.getElementById('mobileFloatSearch')),
+        );
 
         // Initialize Feature Info (Click on Map)
         initFeatureInfo(map, layerGroups);

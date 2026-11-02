@@ -1,3 +1,5 @@
+import { sesuaikanZoomUntukLayer } from './map.js';
+
 /**
  * Setup layer checkbox controls
  * @param {Object} map - Leaflet map instance
@@ -21,6 +23,10 @@ export const initControls = (map, layers) => {
           // Add visual feedback
           const label = this.closest('.group')?.querySelector('label');
           if (label) label.classList.add('text-blue-600', 'font-black');
+
+          // Kalau zoom sekarang terlalu jauh, sesuaikan otomatis
+          // supaya tidak muncul peringatan kosong di awal.
+          sesuaikanZoomUntukLayer(map, layerId);
         } else {
           layer.remove();
           // Remove visual feedback

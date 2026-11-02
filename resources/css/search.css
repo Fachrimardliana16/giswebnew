@@ -1,0 +1,241 @@
+/* ============================================================
+   SARAN PENCARIAN (autocomplete) + PEMILIH FITUR BERTUMPUK
+   ============================================================ */
+
+/* ---------- Kotak saran ---------- */
+.fsug {
+    display: none;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 16px 40px -12px rgba(15, 23, 42, 0.28);
+    overflow: hidden;
+    max-height: 300px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    z-index: 200;
+}
+
+.fsug[data-open="1"] {
+    display: block;
+}
+
+/* Versi desktop: menempel di bawah input dalam wadah relative */
+.fsug--desktop {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+}
+
+/* Versi mobile: di dalam panel header */
+#mobileSuggest {
+    margin-top: 8px;
+    border-radius: 12px;
+    max-height: 46vh;
+}
+
+.fsug__item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    padding: 9px 12px;
+    border: 0;
+    border-bottom: 1px solid #f1f5f9;
+    background: #fff;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+
+.fsug__item:last-child {
+    border-bottom: 0;
+}
+
+.fsug__item:hover,
+.fsug__item[aria-selected="true"] {
+    background: #eff6ff;
+}
+
+.fsug__row1 {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.fsug__nama {
+    font-size: 12px;
+    font-weight: 800;
+    color: #0f172a;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fsug__nama mark {
+    background: #fef08a;
+    color: #713f12;
+    padding: 0 1px;
+    border-radius: 2px;
+}
+
+.fsug__nolang {
+    flex: 0 0 auto;
+    font-size: 10px;
+    font-weight: 900;
+    color: #2563eb;
+    background: #dbeafe;
+    padding: 1px 6px;
+    border-radius: 5px;
+    font-variant-numeric: tabular-nums;
+}
+
+.fsug__row2 {
+    font-size: 10px;
+    font-weight: 600;
+    color: #94a3b8;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fsug__kosong {
+    padding: 14px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-align: center;
+}
+
+/* ---------- Pemilih fitur bertumpuk ---------- */
+.fpick {
+    width: 268px;
+    max-width: 84vw;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    background: #fff;
+}
+
+.fpick__head {
+    padding: 12px 14px 10px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 65%, #1e3a8a 100%);
+    color: #fff;
+}
+
+.fpick__title {
+    font-size: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0;
+}
+
+.fpick__hint {
+    font-size: 10px;
+    font-weight: 600;
+    color: #bfdbfe;
+    margin: 2px 0 0;
+}
+
+.fpick__list {
+    max-height: 240px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.fpick__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 12px;
+    border: 0;
+    border-bottom: 1px solid #f1f5f9;
+    background: #fff;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+
+.fpick__item:last-child {
+    border-bottom: 0;
+}
+
+.fpick__item:hover,
+.fpick__item:focus-visible {
+    background: #eff6ff;
+    outline: none;
+}
+
+.fpick__ikon {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: #e0e7ff;
+    color: #4338ca;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fpick__ikon svg {
+    width: 15px;
+    height: 15px;
+}
+
+.fpick__teks {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.fpick__judul {
+    font-size: 11px;
+    font-weight: 900;
+    color: #0f172a;
+    text-transform: uppercase;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fpick__sub {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #94a3b8;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fpick__panah {
+    flex: 0 0 auto;
+    color: #cbd5e1;
+    display: flex;
+}
+
+.fpick__panah svg {
+    width: 14px;
+    height: 14px;
+}
+
+@media (max-width: 767px) {
+    .fsug__item {
+        min-height: 46px;
+        padding: 10px 12px;
+    }
+
+    .fpick {
+        width: 260px;
+    }
+
+    .fpick__item {
+        min-height: 46px;
+    }
+}

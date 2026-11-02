@@ -9,20 +9,24 @@ export const initMap = () => {
   // Define base layers
   const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
+    maxNativeZoom: 19,
     attribution: '© OpenStreetMap Contributors'
   });
 
   const googleSatellite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-    maxZoom: 22,
+    maxZoom: 21,
+    maxNativeZoom: 21,
     attribution: '© Google Maps'
   });
 
   // Create map with basic configuration
+  // maxZoom dibatasi 20: di atas itu basemap OSM/Google tidak punya tile,
+  // sehingga peta tampak kosong (hanya layer WMS transparan yang tersisa).
   const map = L.map('map', {
     center: MAP_CENTER,
     zoom: DEFAULT_ZOOM,
     minZoom: 9,
-    maxZoom: 22,
+    maxZoom: 20,
     maxBounds: MAP_BOUNDS,
     // viscosity rendah: peta boleh sedikit melewati batas (karet),
     // tapi tetap memantul balik. Sebelumnya 0.7 membuat pojok "mentok".
@@ -159,33 +163,69 @@ export const initMap = () => {
  * @param {Object} map - Leaflet map instance
  * @param {Object} layers - Map layers object
  */
+/**
+ * Kelola visibilitas layer berdasarkan zoom — TANPA menghapus layer.
+ *
+ * Versi lama memanggil map.removeLayer() saat zoom di luar rentang,
+ * sehingga layer "hilang" dan tidak kembali ketika user zoom balik.
+ * Sekarang layer dibiarkan terpasang; hanya opacity yang diturunkan
+ * agar tidak memicu permintaan tile yang sia-sia.
+ */
 export const setupMapZoomHandler = (map, layers) => {
-  map.on('zoomend', function () {
-    const currentZoom = map.getZoom();
-    let warningMessage = '';
+  const diterapkan = new Set();
 
-    // Check each visible layer against its zoom requirements
+  const terapkan = () => {
+    const currentZoom = map.getZoom();
+    let peringatan = '';
+
     document.querySelectorAll('.layer-checkbox:checked').forEach(checkbox => {
       const layerId = checkbox.id;
       const layer = layers[layerId];
-      const zoomLevels = LAYER_ZOOM_LEVELS[layerId] || LAYER_ZOOM_LEVELS.default;
+      if (!layer) return;
 
-      if (layer && map.hasLayer(layer)) {
-        if (currentZoom < zoomLevels.minZoom) {
-          warningMessage = `Perbesar zoom hingga level ${zoomLevels.minZoom} untuk melihat detail`;
-          map.removeLayer(layer);
-        } else if (currentZoom > zoomLevels.maxZoom) {
-          warningMessage = `Perkecil zoom hingga level ${zoomLevels.maxZoom} untuk melihat detail`;
-          map.removeLayer(layer);
-        } else if (!map.hasLayer(layer)) {
-          layer.addTo(map);
+      const z = LAYER_ZOOM_LEVELS[layerId] || LAYER_ZOOM_LEVELS.default;
+
+      if (!map.hasLayer(layer)) return;
+
+      if (currentZoom < z.minZoom) {
+        // terlalu jauh: sembunyikan visual, tapi layer tetap "on"
+        layer.setOpacity(0);
+        peringatan = `Perbesar zoom ke level ${z.minZoom} untuk melihat ${checkbox.dataset.value || 'layer ini'}`;
+        diterapkan.add(layerId);
+      } else {
+        if (diterapkan.has(layerId)) {
+          layer.setOpacity(1);
+          diterapkan.delete(layerId);
         }
       }
     });
 
-    // Show warning message as toast
-    if (warningMessage) {
-      showToast(warningMessage, 'warning', 2000);
+    if (peringatan) {
+      showToast(peringatan, 'warning', 2500);
     }
-  });
+  };
+
+  map.on('zoomend', terapkan);
+};
+
+/**
+ * Saat layer baru diaktifkan, kalau zoom sekarang terlalu jauh,
+ * langsung sesuaikan zoom agar datanya kelihatan (bukan hanya peringatan).
+ */
+export const sesuaikanZoomUntukLayer = (map, layerId, opsi = {}) => {
+  const z = LAYER_ZOOM_LEVELS[layerId] || LAYER_ZOOM_LEVELS.default;
+  const current = map.getZoom();
+  if (current >= z.minZoom) return false;
+
+  const target = Math.min(z.minZoom, map.getMaxZoom());
+
+  // Kalau layer punya titik data, terbangkan ke sana; jika tidak, zoom di tengah
+  if (opsi.center) {
+    map.flyTo(opsi.center, target, { duration: 0.9 });
+  } else {
+    map.flyTo(map.getCenter(), target, { duration: 0.9 });
+  }
+
+  showToast(`Zoom disesuaikan ke level ${target} agar data terlihat`, 'info', 2500);
+  return true;
 };

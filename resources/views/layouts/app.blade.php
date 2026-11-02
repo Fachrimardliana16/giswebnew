@@ -60,7 +60,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </div>
-                    <input type="text" id="customerSearchInput" placeholder="Cari Pelanggan atau Nomor Langganan..." class="w-full bg-slate-100/50 border border-transparent text-slate-700 text-xs font-bold rounded-2xl pl-11 pr-32 py-3.5 focus:bg-white focus:ring-8 focus:ring-blue-500/5 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 shadow-sm border-slate-200/60 transition-all duration-300">
+                    <input type="text" id="customerSearchInput" placeholder="Cari Pelanggan atau Nomor Langganan..." aria-autocomplete="list" aria-controls="desktopSuggest" class="w-full bg-slate-100/50 border border-transparent text-slate-700 text-xs font-bold rounded-2xl pl-11 pr-32 py-3.5 focus:bg-white focus:ring-8 focus:ring-blue-500/5 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 shadow-sm border-slate-200/60 transition-all duration-300">
                     <div class="absolute inset-y-0 right-0 flex items-center pr-2 gap-1.5">
                         <button id="clearSearch" aria-label="Bersihkan pencarian" class="p-2 text-slate-300 hover:text-red-500 hidden transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,6 +69,7 @@
                         </button>
                         <button id="searchButton" class="bg-blue-600 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 active:scale-95 transition-all shadow-lg shadow-blue-500/20">Cari</button>
                     </div>
+                    <div class="fsug fsug--desktop" id="desktopSuggest" data-open="0" role="listbox" aria-label="Saran pelanggan"></div>
                 </div>
             </div>
             
@@ -143,7 +144,7 @@
                 </svg>
                 <input type="search" id="mobileFloatSearch" placeholder="Nama atau no. langganan"
                        autocomplete="off" enterkeyhint="search" inputmode="search"
-                       aria-label="Cari pelanggan">
+                       aria-label="Cari pelanggan" aria-autocomplete="list" aria-controls="mobileSuggest">
                 <button type="button" class="mobile-header-search__clear" id="mobileHeaderSearchClear"
                         aria-label="Bersihkan pencarian">
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
@@ -153,6 +154,7 @@
             </div>
             <button type="submit" class="mobile-header-search__btn" id="mobileFloatSearchBtn">Cari</button>
         </form>
+        <div class="fsug" id="mobileSuggest" data-open="0" role="listbox" aria-label="Saran pelanggan"></div>
     </div>
 
     <div class="flex-1 flex overflow-hidden min-h-0 relative">

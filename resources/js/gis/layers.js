@@ -1,4 +1,5 @@
 import { createWMSLayer } from './config.js';
+import { sesuaikanZoomUntukLayer } from './map.js';
 
 /**
  * Initialize and return all map layers
