@@ -17,7 +17,7 @@
  * browser memakai SW lama dan perubahan tidak pernah sampai ke pengguna.
  */
 
-const VERSI = 'v1-2026-11-02';
+const VERSI = 'v2-2026-11-02b';
 const CACHE_ASET = `webgis-aset-${VERSI}`;
 const CACHE_TILE = `webgis-tile-${VERSI}`;
 const CACHE_HALAMAN = `webgis-halaman-${VERSI}`;
@@ -112,6 +112,46 @@ async function jaringanDulu(request) {
     }
 }
 
+/**
+ * Stale-while-revalidate untuk ASET BUILD.
+ *
+ * Cache-first permanen berbahaya di sini: Vite memberi nama berhash, tetapi
+ * nama bisa TIDAK berubah walau isinya berubah. Kalau aset disajikan dari
+ * cache selamanya, pengguna bisa mendapat CSS/JS lama sementara manifest
+ * menunjuk file baru -> aplikasi gagal boot dan muncul
+ * "sistem mengalami kendala teknis".
+ *
+ * SWR: sajikan cache segera (cepat), lalu perbarui di latar belakang.
+ */
+async function asetBuild(request, event) {
+    const cache = await caches.open(CACHE_ASET);
+    const tersimpan = await cache.match(request);
+
+    const perbarui = fetch(request)
+        .then((res) => {
+            if (res && res.ok) cache.put(request, res.clone());
+            return res;
+        })
+        .catch(() => null);
+
+    if (tersimpan) {
+        // perbarui di latar belakang tanpa menahan respons
+        try {
+            event.waitUntil(perbarui);
+        } catch (e) {
+            /* diabaikan */
+        }
+        return tersimpan;
+    }
+
+    const res = await perbarui;
+    if (res) return res;
+
+    const cadangan = await cache.match(request);
+    if (cadangan) return cadangan;
+    throw new Error('aset tidak tersedia offline');
+}
+
 self.addEventListener('fetch', (event) => {
     const { request } = event;
 
@@ -141,9 +181,9 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // ---------- 3. Aset build (berhash, aman permanen) ----------
+    // ---------- 3. Aset build -> stale-while-revalidate ----------
     if (url.origin === self.location.origin && url.pathname.startsWith('/build/')) {
-        event.respondWith(cacheDulu(request, CACHE_ASET));
+        event.respondWith(asetBuild(request, event));
         return;
     }
 

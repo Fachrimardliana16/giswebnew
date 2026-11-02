@@ -1,0 +1,40 @@
+fix(pwa): "kendala teknis" setelah restart — cache aset basi + vh di mobile
+
+DUA penyebab, keduanya ditemukan dari laporan pengguna.
+
+1. "Sistem mengalami kendala teknis" setelah server di-restart.
+   Penyebab: service worker menyimpan aset /build/* dengan cache-first
+   PERMANEN. Setelah build baru, nama berkas bisa berubah (atau browser
+   masih memegang nama lama), sehingga halaman meminta CSS/JS yang tidak
+   ada di cache maupun di server -> bundle gagal dieksekusi -> handler
+   error global menampilkan pesan generik tanpa sebab.
+
+   Perbaikan:
+   - Aset build memakai STALE-WHILE-REVALIDATE, bukan cache-first
+     permanen: tetap cepat, tetapi selalu diperbarui di latar belakang.
+   - Versi SW dinaikkan v1 -> v2 (cache lama dihapus saat activate).
+   - Worker baru langsung mengambil kendali (postMessage LEWATI_TUNGGU +
+     controllerchange -> reload sekali), jadi pengguna tidak terjebak
+     cache lama.
+   - Handler error dipisah: gagal memuat aset -> toast dengan tombol
+     "Muat ulang" yang membersihkan cache SW dulu; error runtime lain
+     cukup dicatat ke konsol. Pesan generik "kendala teknis" dihapus.
+   - showToast kini mendukung duration 0 (permanen) + tombol aksi/tutup.
+   - Teks toast di-escape (sebelumnya innerHTML mentah).
+
+2. Menu Pelanggan/Pengaduan/Pipa/Aksesoris setinggi layar, header &
+   tombol close tidak terlihat (Safari & Chrome mobile).
+   Penyebab: `vh` di mobile mengacu ke viewport TERBESAR (tanpa address
+   bar). body memakai h-screen (100vh) dan sheet 88vh, sehingga dasar
+   sheet berada di bawah area yang terlihat dan header terdorong keluar
+   layar.
+   Perbaikan: body.h-screen -> 100dvh, sheet 86dvh (fallback 86vh),
+   modal 88dvh. dvh mengikuti tinggi yang benar-benar terlihat.
+
+Terukur:
+  - /sw.js 200, Cache-Control no-cache/no-store, Service-Worker-Allowed /
+  - 3 reload berturut: controller aktif, 0 toast error, peta hidup
+  - sheet pada viewport 844 / 780 / 600 px: header_top 135/126/101,
+    header & tombol close SELALU terlihat, isi 645/590/436 px
+  - offline: halaman + peta tampil, bilah "Mode offline" muncul
+  - PHPUnit 55 passed

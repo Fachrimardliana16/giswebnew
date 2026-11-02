@@ -11,7 +11,7 @@
 
 import { showToast } from './toast.js';
 
-const VERSI_SW = 'v1-2026-11-02';
+const VERSI_SW = 'v2-2026-11-02b';
 
 let promptInstall = null;
 
@@ -107,11 +107,35 @@ export function initPwa() {
             .then((reg) => {
                 // periksa pembaruan saat aplikasi dibuka
                 reg.update().catch(() => {});
+
+                // Kalau ada worker baru menunggu, aktifkan & ambil kendali
+                // agar pengguna tidak terjebak memakai cache lama.
+                reg.addEventListener('updatefound', () => {
+                    const baru = reg.installing;
+                    if (!baru) return;
+                    baru.addEventListener('statechange', () => {
+                        if (baru.state === 'installed' && navigator.serviceWorker.controller) {
+                            baru.postMessage({ type: 'LEWATI_TUNGGU' });
+                        }
+                    });
+                });
             })
             .catch((err) => {
                 console.warn('Service worker gagal didaftarkan:', err);
             });
     });
+
+    // Ambil kendali segera setelah worker baru aktif, tanpa perlu reload manual
+    let sudahMuatUlang = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (sudahMuatUlang) return;
+        sudahMuatUlang = true;
+        // hanya muat ulang bila sebelumnya memang sudah ada controller
+        if (window.__swSudahAda) {
+            location.reload();
+        }
+    });
+    window.__swSudahAda = Boolean(navigator.serviceWorker.controller);
 
     // Kalau ada worker baru menunggu, aktifkan langsung
     navigator.serviceWorker.addEventListener('message', (e) => {

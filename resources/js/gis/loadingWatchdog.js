@@ -91,8 +91,36 @@ export function initLoadingWatchdog() {
         }, 1000);
     }
 
-    // Penanganan error tak terduga -> beri tahu pengguna, jangan diam
-    window.addEventListener('error', () => {
-        showToast('Sistem mengalami kendala teknis. Mohon segarkan halaman.', 'error', 5000);
-    });
+    // Penanganan error tak terduga.
+    //
+    // Jangan hanya menampilkan "kendala teknis": itu menyembunyikan penyebab
+    // dan membuat pengguna tidak tahu harus berbuat apa. Bedakan dua kasus:
+    //  - aset gagal dimuat (biasanya cache service worker basi) -> tawarkan
+    //    pemuatan ulang paksa
+    //  - error lain -> beri tahu, sertakan ringkasan di konsol
+    window.addEventListener('error', (e) => {
+        const target = e.target || {};
+        const url = target.src || target.href || '';
+
+        // error memuat script/link (bukan error runtime)
+        if (url && (url.includes('/build/') || url.endsWith('.js') || url.endsWith('.css'))) {
+            console.error('Aset gagal dimuat:', url);
+            showToast('Sebagian berkas aplikasi gagal dimuat. Ketuk untuk memuat ulang.', 'error', 0, {
+                aksi: 'Muat ulang',
+                onAksi: async () => {
+                    // bersihkan cache service worker lalu muat ulang
+                    try {
+                        const reg = await navigator.serviceWorker?.getRegistration();
+                        reg?.active?.postMessage({ type: 'BERSIHKAN_CACHE' });
+                    } catch (err) { /* diabaikan */ }
+                    setTimeout(() => location.reload(), 400);
+                },
+            });
+            return;
+        }
+
+        // error runtime biasa
+        console.error('Kesalahan aplikasi:', e.message || e.error);
+    }, true);
+
 }

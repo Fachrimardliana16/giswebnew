@@ -15,10 +15,21 @@
 /* ---------- Layout dasar: peta penuh, tanpa footer ---------- */
 @media (max-width: 767px) {
     html, body {
+        /* 100% mengikuti viewport layout; tambahkan dvh agar di Safari/Chrome
+           mobile body tidak lebih tinggi dari area yang terlihat.
+           Tanpa ini, `body` dari class h-screen (100vh) membuat sheet
+           diposisikan dari dasar yang salah -> header & tombol tutup
+           terdorong keluar layar. */
         height: 100%;
+        height: 100dvh;
         overflow: hidden;
         overscroll-behavior: none;
         -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Netralkan h-screen (100vh) pada body — sumber masalah vh di mobile */
+    body.h-screen {
+        height: 100dvh !important;
     }
 
     /* Footer copyright bukan pola aplikasi: sembunyikan di mobile */
@@ -470,8 +481,23 @@ body:has(.mobile-header-search[data-open="1"]) .mobile-fab {
         inset: auto 0 0 0 !important;
         width: 100% !important;
         max-width: 100% !important;
-        height: 88vh !important;
-        max-height: 88vh !important;
+        /*
+         * Tinggi sheet: pakai dvh, BUKAN vh.
+         *
+         * Di Safari/Chrome mobile, `vh` mengacu ke viewport TERBESAR (tanpa
+         * address bar). Saat address bar terlihat, 88vh bisa lebih tinggi
+         * dari area yang benar-benar terlihat -> header + tombol close
+         * terdorong keluar layar.
+         * dvh = dynamic viewport height, mengikuti tinggi yang terlihat.
+         * vh tetap ditulis lebih dulu sebagai cadangan browser lama.
+         */
+        height: 86vh !important;
+        height: 86dvh !important;
+        max-height: 86vh !important;
+        max-height: 86dvh !important;
+        /* jangan pernah melebihi area yang terlihat */
+        top: auto !important;
+        bottom: 0 !important;
         border-radius: var(--sheet-radius) var(--sheet-radius) 0 0 !important;
         border-right: 0 !important;
         border-top: 1px solid rgba(15, 23, 42, 0.1) !important;
@@ -1044,8 +1070,11 @@ body:has(.mobile-header-search[data-open="1"]) .mobile-fab {
         border-radius: 20px 20px 0 0 !important;
         align-self: flex-end;
         margin-bottom: 0 !important;
-        max-height: 90vh;
+        /* dvh: sama alasannya dengan sheet — vh terlalu tinggi di mobile */
+        max-height: 88vh;
+        max-height: 88dvh;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     [id$="Modal"] {
