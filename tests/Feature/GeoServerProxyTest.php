@@ -67,10 +67,12 @@ class GeoServerProxyTest extends TestCase
         Http::assertSent(function ($request) {
             $data = $request->data();
             $pn = $data['propertyname'] ?? $data['propertyName'] ?? '';
+            $kolom = explode(',', $pn);
 
-            return ! str_contains($pn, 'geom')
-                && ! str_contains($pn, 'password')
-                && str_contains($pn, 'nama');
+            // kolom berbahaya tidak boleh lolos, tapi geom wajib disertakan
+            return ! in_array('password_rahasia', $kolom, true)
+                && in_array('geom', $kolom, true)
+                && in_array('nama', $kolom, true);
         });
     }
 
@@ -111,19 +113,51 @@ class GeoServerProxyTest extends TestCase
         });
     }
 
-    public function test_cql_filter_kutip_diescape(): void
+    public function test_cql_filter_diteruskan_tanpa_dirusak(): void
     {
         Http::fake([
             'geoserver-uji.local/*' => Http::response('', 200),
         ]);
 
+        $cql = "strToUpperCase(nama) LIKE '%HARDIMAN%'";
+
         $this->actingAs($this->user)
-            ->get('/geo-proxy?SERVICE=WMS&REQUEST=GetMap&BBOX=0,0,1,1&cql_filter='.rawurlencode("nama='x'"));
+            ->get('/geo-proxy?service=WFS&request=GetFeature&BBOX=0,0,1,1&cql_filter='.rawurlencode($cql));
+
+        Http::assertSent(function ($request) use ($cql) {
+            // kutip TIDAK boleh digandakan: GeoServer menolak 'x''y'
+            return ($request->data()['cql_filter'] ?? null) === $cql;
+        });
+    }
+
+    public function test_cql_filter_kutip_tidak_seimbang_ditolak(): void
+    {
+        $this->actingAs($this->user)
+            ->get('/geo-proxy?service=WMS&REQUEST=GetMap&BBOX=0,0,1,1&cql_filter='.rawurlencode("nama='x"))
+            ->assertStatus(400);
+    }
+
+    public function test_cql_filter_komentar_ditolak(): void
+    {
+        $this->actingAs($this->user)
+            ->get('/geo-proxy?service=WMS&REQUEST=GetMap&BBOX=0,0,1,1&cql_filter='.rawurlencode("nama='x' -- drop"))
+            ->assertStatus(400);
+    }
+
+    public function test_getfeature_selalu_menyertakan_geom(): void
+    {
+        Http::fake([
+            'geoserver-uji.local/*' => Http::response('{"type":"FeatureCollection","features":[]}', 200),
+        ]);
+
+        $this->actingAs($this->user)
+            ->get('/geo-proxy?service=WFS&request=GetFeature&typeName=x&propertyName=nama');
 
         Http::assertSent(function ($request) {
-            $data = $request->data();
+            $pn = $request->data()['propertyname'] ?? '';
 
-            return ($data['cql_filter'] ?? null) === "nama=''x''";
+            // tanpa geom, GeoServer mengirim geometry:null dan marker tak bisa dipasang
+            return str_contains($pn, 'geom');
         });
     }
 

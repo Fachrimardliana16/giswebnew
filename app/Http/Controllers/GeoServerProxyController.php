@@ -57,11 +57,19 @@ class GeoServerProxyController extends Controller
         }
 
         if (isset($params['cql_filter'])) {
-            if (strlen($params['cql_filter']) > self::MAX_CQL_LENGTH) {
+            $cql = (string) $params['cql_filter'];
+
+            if (strlen($cql) > self::MAX_CQL_LENGTH) {
                 return response()->json(['error' => 'cql_filter terlalu panjang'], 400);
             }
-            // escape kutip tunggal agar tidak bisa keluar dari literal CQL
-            $params['cql_filter'] = str_replace("'", "''", (string) $params['cql_filter']);
+
+            if (! $this->cqlLooksSafe($cql)) {
+                return response()->json(['error' => 'cql_filter tidak valid'], 400);
+            }
+
+            // JANGAN meng-escape kutip: GeoServer menolak 'x''y'. Kutip yang
+            // tidak seimbang sudah ditolak oleh cqlLooksSafe().
+            $params['cql_filter'] = $cql;
         }
 
         $isWfs = strtoupper($params['service'] ?? '') === 'WFS';
@@ -129,6 +137,31 @@ class GeoServerProxyController extends Controller
     }
 
     /**
+     * Validasi ringan CQL sebelum diteruskan.
+     *
+     * Bukan parser penuh: tujuannya menolak input yang jelas berbahaya
+     * (kutip tidak seimbang, komentar SQL, statement berantai) tanpa
+     * merusak ekspresi CQL yang sah seperti LIKE '%nama%'.
+     */
+    private function cqlLooksSafe(string $cql): bool
+    {
+        // kutip tunggal harus genap
+        if (substr_count($cql, "'") % 2 !== 0) {
+            return false;
+        }
+
+        // tidak boleh ada komentar / pemisah statement
+        foreach (['--', '/*', '*/', ';', '\\'] as $bad) {
+            if (str_contains($cql, $bad)) {
+                return false;
+            }
+        }
+
+        // hanya karakter yang muncul pada ekspresi CQL normal
+        return (bool) preg_match('/^[A-Za-z0-9_%.,()\'\s<>=!+*\/-]+$/u', $cql);
+    }
+
+    /**
      * Batasi jumlah fitur dan kolom yang dikembalikan.
      *
      * @param  array<string, mixed>  $params
@@ -147,14 +180,21 @@ class GeoServerProxyController extends Controller
             }
         }
 
-        // klien boleh minta subset, tapi tidak boleh minta kolom di luar whitelist
+        // Klien boleh minta subset, tapi tidak boleh minta kolom di luar whitelist.
+        // 'geom' WAJIB disertakan: tanpa itu GeoServer mengirim geometry: null
+        // dan pencarian tidak bisa menaruh marker di peta.
+        $wajib = ['nama', 'nolang', 'geom'];
+
         if (isset($params['propertyname'])) {
             $diminta = array_map('trim', explode(',', $params['propertyname']));
             $diizinkan = array_values(array_intersect($diminta, self::WFS_PROPERTIES));
-            $params['propertyname'] = $diizinkan ? implode(',', $diizinkan) : implode(',', self::WFS_PROPERTIES);
+            $kolom = $diizinkan ?: self::WFS_PROPERTIES;
         } else {
-            $params['propertyname'] = implode(',', self::WFS_PROPERTIES);
+            $kolom = self::WFS_PROPERTIES;
         }
+
+        $kolom = array_values(array_unique(array_merge($kolom, $wajib)));
+        $params['propertyname'] = implode(',', $kolom);
 
         return $params;
     }
