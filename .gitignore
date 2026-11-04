@@ -48,3 +48,14 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# --- Berkas uji lokal / sementara (AUDIT) ---
+# _uji_pw.php berisi reset password user dengan bcrypt -> TIDAK BOLEH masuk repo
+_uji_pw.php
+_uji_*.mjs
+_uji_*.js
+_uji_*.php
+/.uji_*
+
+# Cache tile hasil proxy (dibuat saat runtime, bukan sumber kode)
+/storage/framework/cache/geotile

@@ -1,0 +1,122 @@
+/* ============================================================
+   SPLASH APLIKASI (layar tunggu saat PWA dibuka)
+   HTML/CSS murni: tampil sejak cat pertama, tidak menunggu JS.
+   Ditutup oleh resources/js/gis/splash.js
+   ============================================================ */
+
+.app-splash {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: linear-gradient(160deg, #1d4ed8 0%, #1e40af 55%, #172554 100%);
+    opacity: 1;
+    transition: opacity 0.35s ease, visibility 0.35s ease;
+    /* jangan menahan sentuhan sampai splash dibuka */
+    touch-action: none;
+}
+
+.app-splash--tutup {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.app-splash__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    color: #fff;
+}
+
+.app-splash__logo {
+    width: 88px;
+    height: 88px;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.55);
+    animation: app-splash-napas 2.2s ease-in-out infinite;
+}
+
+.app-splash__logo img {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    object-fit: contain;
+    background: #fff;
+}
+
+.app-splash__judul {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+
+.app-splash__judul span {
+    color: #bfdbfe;
+}
+
+.app-splash__sub {
+    margin: 6px 0 22px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: #dbeafe;
+}
+
+/* Bilah progres tak-tentu: memberi kesan "sedang bekerja" tanpa angka palsu */
+.app-splash__bar {
+    position: relative;
+    width: 148px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.22);
+    overflow: hidden;
+}
+
+.app-splash__bar span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 40%;
+    border-radius: 999px;
+    background: #fff;
+    animation: app-splash-jalan 1.15s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+.app-splash__teks {
+    margin: 14px 0 0;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(219, 234, 254, 0.85);
+}
+
+@keyframes app-splash-jalan {
+    0%   { transform: translateX(-110%); }
+    100% { transform: translateX(300%); }
+}
+
+@keyframes app-splash-napas {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.04); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .app-splash__logo { animation: none; }
+    .app-splash__bar span { animation-duration: 2.4s; }
+}

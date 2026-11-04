@@ -11,6 +11,8 @@ import { initLoadingWatchdog } from './gis/loadingWatchdog.js';
 import { initMobileApp } from './gis/mobileApp.js';
 import { initSearchSuggest } from './gis/searchSuggest.js';
 import { initPwa } from './gis/pwa.js';
+import { initSplash, tutupSplashApp } from './gis/splash.js';
+import { initCameraAR } from './gis/ar/cameraAR.js';
 
 /**
  * Tampilkan pesan gagal-muat di dalam area peta, bukan halaman blank.
@@ -57,6 +59,9 @@ async function boot() {
     // PWA: daftarkan service worker & pantau status offline
     initPwa();
 
+    // Splash: pastikan selalu ditutup (juga saat Leaflet gagal dimuat)
+    initSplash();
+
     // Initialize UI Toggles immediately for best responsiveness
     initMobileToggle();
     initProfileDropdown();
@@ -78,6 +83,7 @@ async function boot() {
             'Pustaka peta (Leaflet) gagal dimuat.',
             'Periksa koneksi internet, lalu muat ulang halaman.',
         ]);
+        tutupSplashApp();
         return;
     }
 
@@ -126,9 +132,18 @@ async function boot() {
         // Initialize Feature Info (Click on Map)
         initFeatureInfo(map, layerGroups);
 
+        // Camera AR: hanya memasang listener tombol; kamera baru dibuka
+        // saat pengguna menekan tombol (izin harus dari gesture).
+        initCameraAR();
+
         console.log('GIS App Ready!');
+
+        // Peta sudah dibuat & tile pertama siap dicat -> buka splash.
+        // Tunggu 2 frame supaya Leaflet selesai menata tile, bukan tampil kosong.
+        requestAnimationFrame(() => requestAnimationFrame(() => tutupSplashApp()));
     } catch (error) {
         console.error('GIS App Error:', error);
+        tutupSplashApp();
     }
 }
 

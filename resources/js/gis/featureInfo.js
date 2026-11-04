@@ -101,9 +101,22 @@ export function initFeatureInfo(map, layers) {
             const titikAktif = aktif.filter(id => LAYER_WFS[id]);
             const garisAktif = aktif.filter(id => !LAYER_WFS[id]);
 
+            // --- FITUR BARU: kumpulkan cql_filter tiap layer titik ---
+            // Sumbernya layer WMS yang sedang tampil, jadi popup selalu
+            // mengikuti filter yang sama dengan tile peta. Tanpa ini,
+            // peta boleh kosong tapi klik tetap mengembalikan data.
+            const cqlTitik = {};
+            titikAktif.forEach((id) => {
+                const cql = layers[id]?.wmsParams?.cql_filter;
+                if (cql && String(cql).trim() !== '' && String(cql).trim() !== '1=1') {
+                    cqlTitik[id] = String(cql);
+                }
+            });
+            // --- AKHIR FITUR BARU ---
+
             // 1 request WFS untuk semua layer titik
             let kandidat = titikAktif.length
-                ? await ambilFiturSekitarWfs(map, titikAktif, e.latlng)
+                ? await ambilFiturSekitarWfs(map, titikAktif, e.latlng, cqlTitik)
                 : [];
 
             // GetFeatureInfo hanya untuk layer garis (pipa)

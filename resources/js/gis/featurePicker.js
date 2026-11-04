@@ -47,8 +47,16 @@ export const LAYER_WFS = {
  * satu GetFeature (ServiceException), tetapi menerima `bbox` dengan satu
  * typeName. Jadi dipakai satu request PER layer titik — tetap jauh lebih
  * hemat daripada 9 request GetFeatureInfo per layer.
+ *
+ * @param {Object} map
+ * @param {Array<string>} layerIds layer yang sedang aktif
+ * @param {Object} latlng titik klik
+ * @param {Object} cqlPerLayer peta { layerId: 'cql_filter' } — WAJIB.
+ *        Tanpa ini klik tetap mengembalikan data yang sudah disembunyikan
+ *        filter: tile peta tampak kosong, tapi popup masih berisi pelanggan
+ *        dari status/kondisi yang tidak dipilih.
  */
-export async function ambilFiturSekitarWfs(map, layerIds, latlng) {
+export async function ambilFiturSekitarWfs(map, layerIds, latlng, cqlPerLayer = {}) {
     const titik = layerIds.filter(id => LAYER_WFS[id]);
     if (!titik.length) return [];
 
@@ -72,8 +80,29 @@ export async function ambilFiturSekitarWfs(map, layerIds, latlng) {
             typeName: `webgis:${LAYER_WFS[layerId]}`,
             outputFormat: 'application/json',
             maxFeatures: String(MAKS_FITUR),
-            bbox,
         });
+
+        // --- FITUR BARU: teruskan filter layer ke query klik ---
+        // Filter diambil dari layer WMS yang sedang tampil (wmsParams.cql_filter),
+        // supaya isi popup selalu sama dengan apa yang terlihat di peta.
+        //
+        // PENTING (terukur): GeoServer MENOLAK permintaan yang memakai
+        // `bbox` dan `cql_filter` sekaligus —
+        //   "bbox and cql_filter both specified but are mutually exclusive"
+        // sehingga popup-nya mati total, bukan sekadar tidak terfilter.
+        // Karena itu, saat ada filter, batas area dipindah KE DALAM CQL
+        // memakai fungsi spasial BBOX(geom,...), dan parameter `bbox`
+        // tidak dikirim. Sudah diuji:
+        //   status='2' + BBOX -> 75 fitur, status='1' + BBOX -> 0 fitur
+        const cql = cqlPerLayer[layerId];
+        const adaFilter = cql && String(cql).trim() !== '' && String(cql).trim() !== '1=1';
+
+        if (adaFilter) {
+            params.set('cql_filter', `${String(cql).trim()} AND BBOX(geom,${bbox},'EPSG:4326')`);
+        } else {
+            params.set('bbox', bbox);
+        }
+        // --- AKHIR FITUR BARU ---
 
         try {
             const res = await fetch(`${GEOSERVER_WFS_URL}?${params.toString()}`);

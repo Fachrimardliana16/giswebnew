@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\UserController;
@@ -47,9 +49,25 @@ Route::get('/manifest.webmanifest', function () {
     ]);
 })->name('manifest');
 
+// --- AUDIT KEAMANAN: route debug dihapus -------------------------------
+//
+// 1. /test-geoserver  -> duplikat /geo-proxy tanpa auth, tidak dipakai UI.
+//                        Dihapus.
+// 2. /geo-proxy        -> sebelumnya TANPA auth: siapa pun di internet bisa
+//                        memakai server ini sebagai proxy GeoServer gratis
+//                        (open proxy), menghabiskan kuota dan membebani
+//                        upstream. Sekarang wajib login.
+//                        Endpoint tetap di luar grup auth supaya tile yang
+//                        di-cache SW tidak memicu redirect ke /login, tetapi
+//                        aksesnya diperiksa di controller.
+// 3. /login-test       -> mem-bypass CSRF (withoutMiddleware('web')) dan
+//                        menanamkan password plaintext di kode. Dihapus;
+//                        login normal sudah cukup.
+//
+Route::get('/geo-proxy', [GeoServerProxyController::class, 'proxy'])->name('geo.proxy');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [MapController::class, 'index'])->name('dashboard');
-    Route::get('/geo-proxy', [GeoServerProxyController::class, 'proxy'])->name('geo.proxy');
     
     // User & Role Management (Admin only)
     Route::middleware(['admin.access'])->group(function () {

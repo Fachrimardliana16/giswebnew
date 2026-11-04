@@ -7,7 +7,18 @@
 
 @php($mobileShell = true)   {{-- aktifkan bottom nav + FAB di layout --}}
 
+{{-- SAKELAR FITUR CAMERA AR.
+     false = tombol & fungsinya disembunyikan (menunggu rilis berikutnya).
+     true  = muncul kembali apa adanya, tanpa perubahan kode lain.
+     Dipakai di dua tempat: FAB dashboard dan tombol tengah bottom nav. --}}
+@php($tampilkanCameraAR = false)
+
 @section('content')
+    {{-- Splash aplikasi: HTML/CSS murni, tampil sejak cat pertama sehingga
+         pengguna tidak melihat layar kosong sementara bundel JS & peta dimuat.
+         Ditutup oleh splash.js setelah peta siap. --}}
+    @include('partials.splash')
+
     <div class="flex-1 relative overflow-hidden group">
         <div id="map" class="absolute inset-0"></div>
 
@@ -25,6 +36,20 @@
                     <span class="text-xs font-black text-slate-700 uppercase tracking-tight">Peta</span>
                 </div>
             </button>
+            {{-- Camera AR DIMATIKAN SEMENTARA (menunggu rilis berikutnya).
+                 Kode tidak dihapus: ubah $tampilkanCameraAR menjadi true.
+                 Ada dua titik yang dikendalikan flag ini — yang satu lagi di
+                 partials/mobile-shell.blade.php (tombol tengah bottom nav). --}}
+            @if (!empty($tampilkanCameraAR))
+                <button type="button" class="ar-fab" data-ar-buka aria-label="Buka kamera AR melihat jalur pipa">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 8V6a2 2 0 012-2h2M17 4h2a2 2 0 012 2v2M21 16v2a2 2 0 01-2 2h-2M7 20H5a2 2 0 01-2-2v-2"></path>
+                        <circle cx="12" cy="12" r="3.2"></circle>
+                    </svg>
+                    <span class="ar-fab__teks">Camera AR</span>
+                </button>
+            @endif
             <button id="getLocationBtn" aria-label="Tampilkan lokasi saya" class="flex items-center gap-3 px-4 py-3 bg-glass border border-white/30 rounded-2xl shadow-premium hover:scale-105 active:scale-95 transition-all group overflow-hidden">
                 <div class="w-9 h-9 rounded-xl bg-emerald-50/50 flex items-center justify-center text-emerald-600 transition-all group-hover:bg-emerald-600 group-hover:text-white shadow-inner" id="locationIcon">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -38,6 +63,9 @@
                 </div>
             </button>
         </div>
+
+        {{-- Panel Camera AR (fullscreen): kamera + kanvas garis pipa --}}
+        @include('partials.ar-panel')
 
         {{-- State + tombol basemap tersembunyi: dipakai bersama oleh FAB mobile
              dan sheet "Tampilan Peta". Tidak terlihat, hanya pemicu logika. --}}

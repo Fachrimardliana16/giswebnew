@@ -2,12 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>{{ $title ?? 'WebGIS Tirta Perwira' }}</title>
 
     {{-- PWA --}}
     <link rel="manifest" href="{{ route('manifest') }}">
     <meta name="theme-color" content="#1d4ed8">
+    {{-- viewport-fit=cover + warna ini membuat header menyambung ke status bar
+         (tidak ada "batas" putih di atas aplikasi). --}}
     <meta name="application-name" content="WebGIS Tirta Perwira">
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
@@ -54,7 +56,7 @@
                 <div class="p-1.5 bg-white rounded-xl shadow-sm border border-slate-100 group-hover:scale-110 transition-transform">
                     <img src="https://cdn-icons-png.flaticon.com/512/7471/7471547.png" alt="Logo" class="w-7 h-7">
                 </div>
-                <div class="hidden lg:block border-l border-white/20 pl-4">
+                <div class="header-brand hidden lg:block border-l border-white/20 pl-4">
                     <h1 class="font-black text-xl tracking-tighter leading-none text-white uppercase">WEB<span class="text-blue-200">GIS</span></h1>
                     <p class="text-[8px] uppercase font-black tracking-[0.2em] text-blue-100 leading-none mt-1">Tirta Perwira</p>
                 </div>
@@ -73,6 +75,14 @@
                     </div>
                     <input type="text" id="customerSearchInput" placeholder="Cari Pelanggan atau Nomor Langganan..." aria-autocomplete="list" aria-controls="desktopSuggest" class="w-full bg-slate-100/50 border border-transparent text-slate-700 text-xs font-bold rounded-2xl pl-11 pr-32 py-3.5 focus:bg-white focus:ring-8 focus:ring-blue-500/5 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 shadow-sm border-slate-200/60 transition-all duration-300">
                     <div class="absolute inset-y-0 right-0 flex items-center pr-2 gap-1.5">
+                        <button type="button" id="desktopRefreshMap" data-peta-refresh
+                                aria-label="Muat ulang peta" title="Muat ulang peta"
+                                class="header-refresh p-2 text-slate-400 hover:text-blue-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v6h6M20 20v-6h-6"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M20.49 9A9 9 0 005.64 5.64L4 10m0 4a9 9 0 0014.36 3.36L20 14"></path>
+                            </svg>
+                        </button>
                         <button id="clearSearch" aria-label="Bersihkan pencarian" class="p-2 text-slate-300 hover:text-red-500 hidden transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
@@ -84,7 +94,15 @@
                 </div>
             </div>
             
-            <!-- Mobile: ikon cari + akun di header (menggantikan posisi profil lama) -->
+            <!-- Mobile: refresh peta + ikon cari + akun di header -->
+            <button type="button" id="mobileRefreshMap" data-peta-refresh
+                    aria-label="Muat ulang peta" title="Muat ulang peta"
+                    class="md:hidden header-refresh header-refresh--mobile p-2.5 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v6h6M20 20v-6h-6"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.49 9A9 9 0 005.64 5.64L4 10m0 4a9 9 0 0014.36 3.36L20 14"></path>
+                </svg>
+            </button>
             <button id="mobileSearchToggle" aria-label="Buka pencarian" aria-controls="mobileHeaderSearch" aria-expanded="false" class="md:hidden p-2.5 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>

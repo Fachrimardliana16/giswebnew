@@ -7,6 +7,7 @@
 
 import { versiFilter } from '../config.js';
 import { cqlPipa } from '../cql.js';
+import { zoomKeHasilFilter, kosongkanTile } from '../autoZoom.js';
 
 export function setupFilterPipa(map, layers) {
   const jenis = document.getElementById('pipaJenisFilter');
@@ -39,7 +40,13 @@ export function setupFilterPipa(map, layers) {
 
     const v = versiFilter(cql);
     if (layer.wmsParams._v !== v) {
+      // Tile lama dibuang dulu: jangan minta tile ber-filter di area lama.
+      kosongkanTile(layer);
       layer.setParams({ cql_filter: cql, _v: v, tiled: true });
+      // --- FITUR BARU: zoom ke sebaran pipa hasil filter ---
+      // web_pipa adalah layer GARIS; autoZoom membaca vertex LineString.
+      zoomKeHasilFilter(map, layers, ['web_pipa']);
+      // --- AKHIR FITUR BARU ---
     }
     if (!map.hasLayer(layer)) layer.addTo(map);
   };

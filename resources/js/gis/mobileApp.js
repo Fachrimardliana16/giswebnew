@@ -3,6 +3,8 @@
  * Hanya aktif di <=767px. Desktop tidak terpengaruh.
  */
 
+import { segarkanPeta } from './layers.js';
+
 const SHEET_SELECTOR = '#sidebar';
 const MQ = '(max-width: 767px)';
 
@@ -122,46 +124,94 @@ export function toggleSheet(mode) {
     else bukaSheet(mode);
 }
 
+/**
+ * Drag-to-close bottom sheet.
+ *
+ * Versi lama hanya memasang listener pada GAGANG (16px), sehingga pengguna yang
+ * menarik dari judul/header tidak terjadi apa-apa — terasa seperti "tidak bisa
+ * ditarik". Sekarang dua area bisa ditarik: gagang dan header judul.
+ *
+ * Tambahan penting: keputusan menutup memakai KECEPATAN, bukan hanya jarak.
+ * Flick pendek ke bawah sudah cukup untuk menutup (pola umum aplikasi mobile),
+ * sedangkan tarikan lambat harus melewati 30% tinggi sheet.
+ */
 function pasangDrag() {
     const sheet = getSheet();
-    const handle = document.querySelector('[data-sheet-handle]');
-    if (!sheet || !handle) return;
+    if (!sheet) return;
 
-    let startY = 0, delta = 0, dragging = false;
+    const areaTarik = [
+        document.querySelector('[data-sheet-handle]'),
+        sheet.querySelector('.sidebar-sheet__head'),
+    ].filter(Boolean);
+
+    if (!areaTarik.length) return;
+
+    let startY = 0;
+    let startT = 0;
+    let delta = 0;
+    let dragging = false;
 
     const mulai = (y) => {
         if (!isMobile()) return;
-        startY = y; delta = 0; dragging = true;
+        // jangan tarik kalau sheet sedang tertutup
+        if (sheet.dataset.open !== '1') return;
+        startY = y;
+        startT = Date.now();
+        delta = 0;
+        dragging = true;
         sheet.dataset.dragging = '1';
+        // matikan transisi supaya jari menempel persis
+        sheet.style.transition = 'none';
     };
+
     const gerak = (y) => {
         if (!dragging) return;
         delta = Math.max(0, y - startY);
-        sheet.style.transform = `translateY(${delta}px)`;
+        // beri sedikit perlawanan setelah 60% tinggi -> terasa "kenyal"
+        const tinggi = sheet.getBoundingClientRect().height || 1;
+        const tarik = delta > tinggi * 0.6 ? tinggi * 0.6 + (delta - tinggi * 0.6) * 0.35 : delta;
+        sheet.style.transform = `translateY(${tarik}px)`;
     };
+
     const selesai = () => {
         if (!dragging) return;
         dragging = false;
         sheet.dataset.dragging = '0';
+        sheet.style.transition = '';
         sheet.style.transform = '';
-        if (delta > 120) tutupSheet();
+
+        const tinggi = sheet.getBoundingClientRect().height || 1;
+        const durasi = Math.max(1, Date.now() - startT);
+        const kecepatan = delta / durasi; // px per ms
+
+        // flick ke bawah, ATAU tarikan melewati 28% tinggi sheet
+        if (kecepatan > 0.55 || delta > tinggi * 0.28) {
+            tutupSheet();
+        }
     };
 
-    handle.addEventListener('touchstart', (e) => mulai(e.touches[0].clientY), { passive: true });
-    handle.addEventListener('touchmove', (e) => gerak(e.touches[0].clientY), { passive: true });
-    handle.addEventListener('touchend', selesai);
-    handle.addEventListener('touchcancel', selesai);
+    areaTarik.forEach((el) => {
+        el.addEventListener('touchstart', (e) => mulai(e.touches[0].clientY), { passive: true });
+        el.addEventListener('touchmove', (e) => {
+            if (!dragging) return;
+            // cegah halaman ikut ter-scroll saat menarik sheet
+            if (e.cancelable) e.preventDefault();
+            gerak(e.touches[0].clientY);
+        }, { passive: false });
+        el.addEventListener('touchend', selesai);
+        el.addEventListener('touchcancel', selesai);
 
-    handle.addEventListener('mousedown', (e) => {
-        mulai(e.clientY);
-        const mm = (ev) => gerak(ev.clientY);
-        const mu = () => {
-            selesai();
-            window.removeEventListener('mousemove', mm);
-            window.removeEventListener('mouseup', mu);
-        };
-        window.addEventListener('mousemove', mm);
-        window.addEventListener('mouseup', mu);
+        el.addEventListener('mousedown', (e) => {
+            mulai(e.clientY);
+            const mm = (ev) => gerak(ev.clientY);
+            const mu = () => {
+                selesai();
+                window.removeEventListener('mousemove', mm);
+                window.removeEventListener('mouseup', mu);
+            };
+            window.addEventListener('mousemove', mm);
+            window.addEventListener('mouseup', mu);
+        });
     });
 }
 
@@ -402,11 +452,42 @@ export function initMobileApp() {
         });
     });
 
-    document.querySelectorAll('[data-nav="peta"]').forEach(btn => {
+    // Tombol Refresh peta sekarang ada di HEADER (kanan kotak pencarian di
+    // desktop, di samping ikon cari di mobile) — bukan lagi di bottom nav,
+    // karena slot tengah nav dipakai Camera AR.
+    document.querySelectorAll('[data-peta-refresh]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const peta = window.map;
+            if (!peta) {
+                window.showToast?.('Peta belum siap', 'warning', 2000);
+                return;
+            }
+
+            if (btn.classList.contains('is-spinning')) return;
+            btn.classList.add('is-spinning');
+            try {
+                await segarkanPeta(peta);
+                navigator.vibrate?.(12);
+                window.showToast?.('Peta dimuat ulang', 'info', 1500);
+            } catch (err) {
+                console.warn('Gagal menyegarkan peta:', err);
+                window.showToast?.('Gagal memuat ulang peta', 'error', 2500);
+            } finally {
+                setTimeout(() => btn.classList.remove('is-spinning'), 700);
+            }
+        });
+    });
+
+    // Tab Camera AR di bottom nav: tutup sheet lebih dulu, baru buka AR.
+    // (data-ar-buka milik modul AR; di sini hanya memastikan sheet tertutup.)
+    document.querySelectorAll('[data-ar-buka][data-nav]').forEach(btn => {
         btn.addEventListener('click', () => {
             tutupSheet();
             setTabAktif('peta');
-        });
+        }, true); // capture: jalan sebelum handler modul AR
     });
 
     // Tombol akun di HEADER (bukan lagi di bottom nav)

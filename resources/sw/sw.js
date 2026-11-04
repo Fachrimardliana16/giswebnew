@@ -17,13 +17,20 @@
  * browser memakai SW lama dan perubahan tidak pernah sampai ke pengguna.
  */
 
-const VERSI = 'v3-2026-11-02c';
+const VERSI = 'v7-2026-11-04b';
 const CACHE_ASET = `webgis-aset-${VERSI}`;
 const CACHE_TILE = `webgis-tile-${VERSI}`;
 const CACHE_HALAMAN = `webgis-halaman-${VERSI}`;
 const CACHE_LAIN = `webgis-lain-${VERSI}`;
 
-const BATAS_TILE = 400;   // jumlah tile maksimum yang disimpan
+// Batas tile dinaikkan dari 400 -> 1500.
+//
+// Satu layar zoom 18 pada peta ini butuh ~12-24 tile per layer, dan
+// keepBuffer:6 menahan ~2 layar tambahan di sekitarnya untuk tiap layer
+// yang aktif. Dengan 400 entri, cache penuh setelah beberapa langkah zoom
+// sehingga pan balik ke area yang baru dilihat tetap memuat ulang tile.
+// 1500 tile (256px, ~10 KB masing-masing) kira-kira 15-30 MB — masih wajar.
+const BATAS_TILE = 1500;
 const BATAS_LAIN = 60;
 
 /** Aset inti yang diambil saat install (app shell). */
@@ -46,6 +53,10 @@ self.addEventListener('activate', (event) => {
         const nama = await caches.keys();
         await Promise.all(
             nama
+                // Buang SEMUA cache versi lama, termasuk cache aset.
+                // Cache aset lama berisi CSS/JS berhash yang tidak akan pernah
+                // dipakai lagi setelah build baru — menyimpannya hanya membuat
+                // kebingungan saat diagnosa.
                 .filter(n => n.startsWith('webgis-') && !n.endsWith(VERSI))
                 .map(n => caches.delete(n))
         );
@@ -125,31 +136,29 @@ async function jaringanDulu(request) {
  */
 async function asetBuild(request, event) {
     const cache = await caches.open(CACHE_ASET);
-    const tersimpan = await cache.match(request);
 
-    const perbarui = fetch(request)
-        .then((res) => {
-            if (res && res.ok) cache.put(request, res.clone());
-            return res;
-        })
-        .catch(() => null);
-
-    if (tersimpan) {
-        // perbarui di latar belakang tanpa menahan respons
-        try {
-            event.waitUntil(perbarui);
-        } catch (e) {
-            /* diabaikan */
+    // NETWORK-FIRST, bukan cache-first.
+    //
+    // Aset build selalu diambil dari jaringan lebih dulu supaya perubahan
+    // CSS/JS langsung terpakai. Cache HANYA cadangan saat offline.
+    //
+    // Versi lama memakai cache-first + SWR. Itu bocor: nama berkas berhash
+    // berubah tiap build (app-ABC.css -> app-XYZ.css), jadi kalau HTML yang
+    // tersimpan di cache masih menunjuk nama LAMA, cache terus menyajikan
+    // aset lama itu selamanya dan perbaikan UI tidak pernah sampai ke
+    // pengguna — persis kasus nav bottom yang "masih sama" di PWA.
+    try {
+        const res = await fetch(request, { cache: 'no-cache' });
+        if (res && res.ok) {
+            // simpan salinan untuk offline; jangan tahan respons bila gagal
+            cache.put(request, res.clone()).catch(() => {});
         }
-        return tersimpan;
+        return res;
+    } catch (e) {
+        const cadangan = await cache.match(request);
+        if (cadangan) return cadangan;
+        throw e;
     }
-
-    const res = await perbarui;
-    if (res) return res;
-
-    const cadangan = await cache.match(request);
-    if (cadangan) return cadangan;
-    throw new Error('aset tidak tersedia offline');
 }
 
 self.addEventListener('fetch', (event) => {
@@ -175,29 +184,19 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // ---------- 2. Tile basemap eksternal ----------
-    // Tile OSM/Google dimuat lewat <img> (no-cors) -> respons opaque.
-    // Aman disimpan karena cache gambar tidak rantai ke eksekusi JS, tetapi
-    // JANGAN pernah memblokir: kalau cache gagal, tetap teruskan ke jaringan.
+    // ---------- 2. Tile basemap eksternal: DIBIARKAN ----------
+    //
+    // Tile OSM/Google dimuat <img> tanpa crossorigin -> request 'no-cors',
+    // respons opaque (status 0). Cache API tidak bisa diandalkan untuk
+    // request seperti ini: cache.put() bisa melempar, dan versi sebelumnya
+    // mengubahnya menjadi respons 504 sehingga PETA BLANK total
+    // ("leaflet maupun satelit").
+    //
+    // Browser sudah punya cache HTTP sendiri untuk gambar. SW tidak perlu
+    // ikut campur. Keuntungan offline untuk tile tetap didapat dari cache
+    // HTTP browser; yang benar-benar penting untuk offline (halaman, aset,
+    // tile WMS lewat /geo-proxy) tetap ditangani di blok lain.
     if (/tile\.openstreetmap\.org|mt\d\.google\.com/.test(url.hostname)) {
-        event.respondWith((async () => {
-            try {
-                const cache = await caches.open(CACHE_TILE);
-                const tersimpan = await cache.match(request);
-                if (tersimpan) return tersimpan;
-
-                const res = await fetch(request);
-                // opaque: status 0, tetap boleh disimpan sebagai gambar
-                if (res && (res.ok || res.type === 'opaque')) {
-                    cache.put(request, res.clone()).catch(() => {});
-                    batasiCache(CACHE_TILE, BATAS_TILE);
-                }
-                return res;
-            } catch (e) {
-                // jangan pernah menggagalkan muat tile
-                return fetch(request).catch(() => new Response('', { status: 504 }));
-            }
-        })());
         return;
     }
 

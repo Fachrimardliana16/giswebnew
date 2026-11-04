@@ -7,14 +7,23 @@ import { showToast } from './toast.js';
  */
 export const initMap = () => {
   // Define base layers
+  //
+  // PENTING: maxZoom pada layer HARUS >= maxZoom peta (20). Sebelumnya OSM
+  // dipasang maxZoom:19 sementara peta maxZoom:20. Di zoom 20 Leaflet
+  // menganggap layer OSM sudah lewat batas maksimum, membuang tile-nya, dan
+  // peta menjadi KOSONG (hanya layer WMS transparan yang tersisa) — gejala
+  // "zoom penuh pakai Leaflet hilang, pakai Google tetap tampil".
+  //
+  // maxNativeZoom boleh lebih rendah: tile zoom 19 diperbesar browser.
+  // Yang tidak boleh adalah maxZoom layer < maxZoom peta.
   const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
+    maxZoom: 22,
     maxNativeZoom: 19,
     attribution: '© OpenStreetMap Contributors'
   });
 
   const googleSatellite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-    maxZoom: 21,
+    maxZoom: 22,
     maxNativeZoom: 21,
     attribution: '© Google Maps'
   });
@@ -79,16 +88,28 @@ export const initMap = () => {
   
   if (locationBtn) {
     locationBtn.addEventListener('click', () => {
-      // Toggle: If location already exists, remove it
+      // Kalau lokasi sudah ditandai: klik berikutnya = FOKUS ke titik itu,
+      // bukan langsung menghapus. Hapus dilakukan lewat tombol di popup
+      // atau klik kedua kalinya pada FAB (toggle hapus).
       if (window.currentUserLocationMarker) {
+        if (!window._lokasiFokusKedua) {
+          // klik pertama: fokus & tandai untuk klik berikutnya = hapus
+          window._lokasiFokusKedua = true;
+          map.setView(window.currentUserLocationMarker.getLatLng(), Math.max(map.getZoom(), 18));
+          window.currentUserLocationMarker.openPopup();
+          window.showToast?.('Klik lagi untuk menghapus titik', 'info', 2200);
+          return;
+        }
+
+        // klik kedua: hapus
+        window._lokasiFokusKedua = false;
         map.removeLayer(window.currentUserLocationMarker);
         window.currentUserLocationMarker = null;
-        
-        // Reset Button UI
         if (locationIcon) {
           locationIcon.classList.replace('bg-red-500', 'bg-emerald-50/50');
           locationIcon.classList.replace('text-white', 'text-emerald-600');
         }
+        window.showToast?.('Lokasi dihapus', 'info', 1800);
         return;
       }
 
@@ -104,6 +125,7 @@ export const initMap = () => {
 
             // Center map and zoom in
             map.setView(latlng, 20);
+            window._lokasiFokusKedua = false;
 
             // Add marker for current location with smaller radius
             window.currentUserLocationMarker = L.circle(latlng, {
@@ -115,7 +137,16 @@ export const initMap = () => {
             }).addTo(map).bindPopup(`
               <div class="text-center p-1">
                 <p class="font-black text-[10px] uppercase mb-1" style="color: #64748b;">Lokasi Anda</p>
-                <button onclick="window.removeMyLocation()" class="bg-red-500 text-white px-3 py-1 rounded-lg text-[9px] font-black uppercase">Hapus Titik</button>
+                <div class="flex items-center justify-center gap-2 mt-1">
+                  <button onclick="window.fokusLokasiSaya()" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase inline-flex items-center gap-1">
+                    <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>
+                    Fokus
+                  </button>
+                  <button onclick="window.removeMyLocation()" class="bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase inline-flex items-center gap-1">
+                    <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                    Hapus
+                  </button>
+                </div>
               </div>
             `, { className: 'custom-gis-popup' }).openPopup();
 
@@ -143,11 +174,19 @@ export const initMap = () => {
     });
   }
 
+  // Global helper: pindah peta ke lokasi yang sudah ditandai (dari popup)
+  window.fokusLokasiSaya = () => {
+    if (window.currentUserLocationMarker) {
+      map.setView(window.currentUserLocationMarker.getLatLng(), Math.max(map.getZoom(), 18));
+    }
+  };
+
   // Global helper to remove location layer from popup
   window.removeMyLocation = () => {
     if (window.currentUserLocationMarker) {
       map.removeLayer(window.currentUserLocationMarker);
       window.currentUserLocationMarker = null;
+      window._lokasiFokusKedua = false;
       if (locationIcon) {
         locationIcon.classList.replace('bg-red-500', 'bg-emerald-50/50');
         locationIcon.classList.replace('text-white', 'text-emerald-600');

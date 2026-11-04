@@ -32,6 +32,41 @@ const DEFINISI = {
 
 const ID = Object.keys(DEFINISI);
 
+/**
+ * Muat ulang semua tile WMS yang sedang tampil.
+ *
+ * Dipakai tombol "Refresh" di bottom nav. Tiga langkah, karena masing-masing
+ * menangani kasus berbeda:
+ *  1. cache proxy tile (service worker) dibersihkan — tile basi/rusak tidak
+ *     akan pernah diperbarui kalau masih ada di cache;
+ *  2. tiap tileLayer menggambar ulang (Leaflet membuang tile lama & minta baru);
+ *  3. invalidateSize() — kalau peta sempat berubah ukuran (rotasi layar,
+ *     keyboard muncul), Leaflet menyimpan ukuran lama dan hanya menggambar
+ *     sebagian layar.
+ * Basemap OSM/Google ikut disegarkan lewat `redraw()` yang sama.
+ */
+export const segarkanPeta = async (map) => {
+  if (!map) return false;
+
+  // 1. Bersihkan cache tile di service worker (kalau ada).
+  try {
+    const reg = await navigator.serviceWorker?.getRegistration();
+    reg?.active?.postMessage({ type: 'BERSIHKAN_CACHE' });
+  } catch (e) { /* offline / SW tidak aktif: lanjut */ }
+
+  // 2. Gambar ulang setiap tile layer yang sedang tampil di peta.
+  map.eachLayer((layer) => {
+    if (typeof layer.redraw === 'function' && typeof layer.getTileUrl === 'function') {
+      layer.redraw();
+    }
+  });
+
+  // 3. Sinkronkan ukuran peta dengan kontainer.
+  map.invalidateSize({ pan: false, animate: false });
+
+  return true;
+};
+
 export const daftarIdLayer = () => ID.slice();
 
 /**

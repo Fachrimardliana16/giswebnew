@@ -24,6 +24,19 @@ export function cqlPelanggan(v = {}) {
   if (v.cabang) c.push(`cabang='${esc(v.cabang)}'`);
   if (v.tarif) c.push(`tarif='${esc(v.tarif)}'`);
 
+  // --- FITUR BARU: isvalid + lunas/belum lunas ---
+  // isvalid bertipe boolean di GeoServer: pakai true/false tanpa kutip.
+  if (v.isvalid === 'true') c.push('isvalid = true');
+  if (v.isvalid === 'false') c.push('isvalid = false');
+
+  // Status pelunasan memakai tgllunas (kolom date).
+  //   'belum' -> tagihan masih berjalan, tgllunas kosong  -> 4.948 pelanggan
+  //   'lunas' -> sudah ada tanggal lunas                  -> 60.746 pelanggan
+  // Angka diambil dari numberMatched GeoServer, bukan perkiraan.
+  if (v.lunas === 'belum') c.push('tgllunas IS NULL');
+  if (v.lunas === 'lunas') c.push('tgllunas IS NOT NULL');
+  // --- AKHIR FITUR BARU ---
+
   if (v.kubikasi) {
     if (v.kubikasi === '0') {
       c.push('drd_pemakaian = 0');
@@ -117,3 +130,88 @@ export function cqlPengaduan(v = {}) {
 
   return c.length ? c.join(' AND ') : '1=1';
 }
+
+// --- FITUR BARU: filter aksesoris (kondisi / diameter / isvalid) ---
+/**
+ * Nama kolom aksesoris TIDAK seragam di sumber data. Dicek satu per satu
+ * lewat DescribeFeatureType, bukan diasumsikan:
+ *   all_gatevalve  : 'kodisi' (salah tulis di data asli) + 'dia'
+ *   all_airvalve   : 'kondisi' + 'dia'
+ *   all_washout    : 'kondisi' + 'dia'
+ *   all_firehydrant: 'kondisi' + 'diameter'
+ *   all_meterinduk : 'diameter' (tidak punya kolom kondisi)
+ * Layer yang tidak disebut memakai default 'kondisi' + 'dia'.
+ */
+const KOLOM_AKSESORIS = {
+  all_gatevalve: { kondisi: 'kodisi', diameter: 'dia' },
+  all_airvalve: { kondisi: 'kondisi', diameter: 'dia' },
+  all_checkvalve: { kondisi: 'kondisi', diameter: 'dia' },
+  all_bend: { kondisi: 'kondisi', diameter: 'dia' },
+  all_dop: { kondisi: 'kondisi', diameter: 'dia' },
+  all_firehydrant: { kondisi: 'kondisi', diameter: 'diameter' },
+  all_meterinduk: { kondisi: null, diameter: 'diameter' },
+  all_prv: { kondisi: 'kondisi', diameter: 'dia' },
+  all_reducer: { kondisi: 'kondisi', diameter: 'dia' },
+  all_strainer: { kondisi: 'kondisi', diameter: 'dia' },
+  all_tee: { kondisi: 'kondisi', diameter: 'dia' },
+  all_titik_tekanan: { kondisi: 'kondisi', diameter: 'dia' },
+  all_washout: { kondisi: 'kondisi', diameter: 'dia' },
+};
+
+/**
+ * Nilai kondisi di lapangan kotor: 'BAIK', 'Baik', 'baik', 'bagus', 'Bagus',
+ * 'BAIK ' (spasi ekor), 'TERTIMBUN'/'TERTIMBIUN'/'TERTIMBUN ' (salah tulis),
+ * 'RUSAK ', 'Baru', 'Berfungsi', bahkan 'true'.
+ *
+ * Karena itu TIDAK boleh pakai perbandingan persis: `kodisi='BAIK'` hanya
+ * menjaring 12 baris padahal yang sebenarnya "baik" ada 249-288 baris —
+ * 95% data akan hilang dari peta tanpa tanda apa pun.
+ *
+ * `strToLowerCase()`/`trim()` DITOLAK GeoServer (HTTP 400), jadi satu-satunya
+ * cara yang terbukti jalan adalah ILIKE dengan pola awalan.
+ */
+const POLA_KONDISI = {
+  baik: ['baik%', 'bagus%', 'baru%', 'berfungsi%', 'true'],
+  rusak: ['rusak%'],
+  tertimbun: ['tertimb%'],
+};
+
+/**
+ * Filter bersama untuk semua layer aksesoris.
+ *
+ * @param {string} layerId
+ * @param {Object} v { kondisi, diameter, isvalid }
+ * @returns {string|null} CQL, atau null bila tidak ada filter
+ */
+export function cqlAksesoris(layerId, v = {}) {
+  const kolom = KOLOM_AKSESORIS[layerId] || { kondisi: 'kondisi', diameter: 'dia' };
+  const c = [];
+
+  // --- kondisi (ILIKE, tahan terhadap variasi penulisan) ---
+  if (v.kondisi && kolom.kondisi) {
+    if (v.kondisi === 'kosong') {
+      c.push(`${kolom.kondisi} IS NULL`);
+    } else {
+      const pola = POLA_KONDISI[v.kondisi];
+      if (pola) {
+        const bagian = pola.map(p => (p === 'true'
+          ? `${kolom.kondisi} ILIKE 'true'`
+          : `${kolom.kondisi} ILIKE '${p}'`));
+        c.push(`(${bagian.join(' OR ')})`);
+      }
+    }
+  }
+
+  // --- diameter: hanya angka, cegah ekspresi aneh masuk CQL ---
+  if (v.diameter && kolom.diameter) {
+    const d = String(v.diameter).replace(/[^0-9]/g, '');
+    if (d) c.push(`${kolom.diameter} = ${d}`);
+  }
+
+  // --- isvalid boolean ---
+  if (v.isvalid === 'true') c.push('isvalid = true');
+  if (v.isvalid === 'false') c.push('isvalid = false');
+
+  return c.length ? c.join(' AND ') : null;
+}
+// --- AKHIR FITUR BARU ---

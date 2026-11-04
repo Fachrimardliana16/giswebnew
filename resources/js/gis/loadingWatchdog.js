@@ -28,15 +28,44 @@ export function resetLoading() {
     }
 }
 
+/**
+ * Sembunyikan spinner TANPA membuang penghitung loading.
+ *
+ * resetLoading() mengosongkan loadingLayersCount. Kalau itu dipanggil saat
+ * tile masih dimuat, tile yang selesai belakangan mengurangi penghitung
+ * menjadi negatif dan status loading jadi kacau (spinner bisa nyangkut
+ * atau hilang saat masih memuat).
+ */
+function sembunyikanSpinner() {
+    tampil($sel('#loadingIndicator'), false);
+    tampil($sel('#zoomHint'), false);
+}
+
+/**
+ * Pengawas loading.
+ *
+ * BATAS_WAKTU dinaikkan dari 8 detik ke 40 detik.
+ *
+ * Alasannya terukur: filter `cabang` di GeoServer butuh 21-29 detik karena
+ * kolomnya tidak terindeks. Dengan batas 8 detik, SETIAP pemilihan cabang
+ * memicu "Loading terlalu lama, reset paksa" — padahal datanya memang sedang
+ * datang, bukan gagal. Pesan "perlu zoom lebih dalam" juga menyesatkan:
+ * masalahnya waktu tunggu server, bukan level zoom.
+ *
+ * Sekarang pengawas hanya bertindak sebagai jaring pengaman kalau server
+ * benar-benar diam, dan pesannya menyebut penyebab yang benar.
+ */
+const BATAS_WAKTU = 40000;
+
 export function startWatchdog() {
     if (watchdog) clearTimeout(watchdog);
     watchdog = setTimeout(() => {
         if (window.loadingLayersCount > 0) {
-            console.warn('Loading terlalu lama, reset paksa');
-            resetLoading();
-            showToast('Beberapa data memerlukan zoom lebih dalam untuk tampil.', 'warning', 5000);
+            console.warn('Data belum selesai dimuat setelah 40 detik; spinner disembunyikan.');
+            sembunyikanSpinner();
+            showToast('Data masih diproses server. Sebagian layer mungkin tampil lebih lambat.', 'warning', 6000);
         }
-    }, 8000);
+    }, BATAS_WAKTU);
 }
 
 export function stopWatchdog() {

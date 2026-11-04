@@ -10,7 +10,7 @@
 
     window.addEventListener('load', function () {
         navigator.serviceWorker
-            .register('/sw.js?v=v3-2026-11-02c', { scope: '/' })
+            .register('/sw.js?v=v5-2026-11-02', { scope: '/' })
             .catch(function (e) {
                 console.warn('Service worker gagal didaftarkan:', e);
             });

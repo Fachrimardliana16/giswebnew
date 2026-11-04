@@ -44,8 +44,28 @@ $accessories = config('gis.accessories', []);
                 <div class="space-y-5 pt-5 pb-2 px-2 border-t border-slate-100/50 mt-2">
                     <x-gis.sidebar.filter-select id="cabangFilter" label="Kantor Cabang Terkait">
                         <option value="">Semua Wilayah Cabang</option>
-                        @foreach(['Kota Bangga', 'Usman Janatin', 'Goentoer Djarjono', 'Ardilawet', 'Jenderal Soedirman', 'Unit IKK Rembang', 'Unit IKK Bukateja', 'Unit IKK Kemangkon'] as $cabang)
-                            <option value="Cabang {{ $cabang }}">Cabang {{ $cabang }}</option>
+                        {{-- NILAI HARUS SAMA PERSIS DENGAN ISI KOLOM `cabang`.
+                             Sebelumnya semua opsi diberi awalan "Cabang ",
+                             padahal di data hanya kantor cabang yang berawalan
+                             "Cabang ". Unit IKK tersimpan TANPA awalan:
+                               'Unit IKK Rembang', 'Unit IKK Bukateja',
+                               'Unit IKK Kemangkon'
+                             Akibatnya memilih unit IKK mengirim
+                               cabang='Cabang Unit IKK Rembang'
+                             yang tidak ada di data -> filter tidak cocok,
+                             peta tidak bergeser, dan tidak ada data tampil.
+                             Jumlah baris tiap nilai diambil dari data asli. --}}
+                        @foreach([
+                            'Cabang Kota Bangga' => 22066,
+                            'Cabang Jenderal Soedirman' => 14557,
+                            'Cabang Ardilawet' => 8935,
+                            'Cabang Usman Janatin' => 7136,
+                            'Cabang Goentoer Djarjono' => 6086,
+                            'Unit IKK Kemangkon' => 3992,
+                            'Unit IKK Bukateja' => 1096,
+                            'Unit IKK Rembang' => 1035,
+                        ] as $cabang => $jumlah)
+                            <option value="{{ $cabang }}">{{ $cabang }} ({{ number_format($jumlah, 0, ',', '.') }})</option>
                         @endforeach
                     </x-gis.sidebar.filter-select>
 
@@ -108,6 +128,20 @@ $accessories = config('gis.accessories', []);
                         <option value="11-20">Antara 11 - 20 Tahun</option>
                         <option value="21-30">Antara 21 - 30 Tahun</option>
                     </x-gis.sidebar.filter-select>
+
+                    {{-- --- FITUR BARU: isValid + status pelunasan --- --}}
+                    <x-gis.sidebar.filter-select id="isvalidFilter" label="Validitas Data">
+                        <option value="">Semua Data</option>
+                        <option value="true">Valid</option>
+                        <option value="false">Tidak Valid</option>
+                    </x-gis.sidebar.filter-select>
+
+                    <x-gis.sidebar.filter-select id="lunasFilter" label="Status Pelunasan">
+                        <option value="">Semua Pelanggan</option>
+                        <option value="belum">Belum Lunas</option>
+                        <option value="lunas">Sudah Lunas</option>
+                    </x-gis.sidebar.filter-select>
+                    {{-- --- AKHIR FITUR BARU --- --}}
 
                     <div class="space-y-2.5">
                         <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Filtrasi Nama Petugas Cater</label>
@@ -230,6 +264,36 @@ $accessories = config('gis.accessories', []);
                         <x-gis.sidebar.layer-checkbox id="{{ $id }}" label="{{ $label }}" class="aksesoris-checkbox" />
                     @endforeach
                 </div>
+
+                {{-- --- FITUR BARU: filter bersama semua layer aksesoris --- --}}
+                <div class="space-y-4 pt-5 mt-4 pb-2 px-2 border-t border-slate-100/50">
+                    <x-gis.sidebar.filter-select id="aksesorisKondisiFilter" label="Kondisi Aset">
+                        <option value="">Semua Kondisi</option>
+                        <option value="baik">Baik / Bagus / Baru</option>
+                        <option value="rusak">Rusak</option>
+                        <option value="tertimbun">Tertimbun</option>
+                        <option value="kosong">Belum Diisi</option>
+                    </x-gis.sidebar.filter-select>
+
+                    <x-gis.sidebar.filter-select id="aksesorisDiameterFilter" label="Diameter (mm)">
+                        <option value="">Semua Diameter</option>
+                        <option value="25">25 mm</option>
+                        <option value="40">40 mm</option>
+                        <option value="50">50 mm</option>
+                        <option value="75">75 mm</option>
+                        <option value="100">100 mm</option>
+                        <option value="150">150 mm</option>
+                        <option value="200">200 mm</option>
+                        <option value="250">250 mm</option>
+                    </x-gis.sidebar.filter-select>
+
+                    <x-gis.sidebar.filter-select id="aksesorisIsvalidFilter" label="Validitas Data">
+                        <option value="">Semua Data</option>
+                        <option value="true">Valid</option>
+                        <option value="false">Tidak Valid</option>
+                    </x-gis.sidebar.filter-select>
+                </div>
+                {{-- --- AKHIR FITUR BARU --- --}}
             </x-gis.sidebar.section>
 
             {{-- Monitoring Section --}}

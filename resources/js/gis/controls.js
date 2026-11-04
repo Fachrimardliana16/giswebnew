@@ -26,7 +26,14 @@ export const initControls = (map, layers) => {
 
           // Kalau zoom sekarang terlalu jauh, sesuaikan otomatis
           // supaya tidak muncul peringatan kosong di awal.
-          sesuaikanZoomUntukLayer(map, layerId);
+          //
+          // KECUALI analisa_pelanggan: zoom-nya ditangani filters/pelanggan.js
+          // lewat zoomKeHasilFilter. Memanggil keduanya membuat dua
+          // flyTo/fitBounds berjalan bersamaan dan saling menimpa —
+          // peta zoom in lalu zoom out sendiri dan tile dimuat ulang.
+          if (layerId !== 'analisa_pelanggan') {
+            sesuaikanZoomUntukLayer(map, layerId);
+          }
         } else {
           layer.remove();
           // Remove visual feedback

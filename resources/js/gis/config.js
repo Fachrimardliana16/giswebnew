@@ -77,17 +77,29 @@ export const createWMSLayer = (name, customOptions = {}) => {
         zIndex: 400,
         maxZoom: zoomLevels.maxZoom,
         minZoom: zoomLevels.minZoom,
+        // GeoServer tidak perlu dimintai gambar baru untuk zoom 19-22:
+        // tile zoom 18 diperbesar oleh browser. Tanpa ini, tiap langkah
+        // zoom di tingkat dalam memicu satu set tile baru (16-30 request)
+        // padahal informasinya sudah mentok di zoom 18.
+        maxNativeZoom: zoomLevels.maxNativeZoom ?? 18,
         crossOrigin: true,
         buffer: 0,
         // Jangan minta tile baru saat animasi zoom berjalan; tunggu berhenti.
         // Ini memotong request berlipat saat pinch/wheel zoom.
         updateWhenZooming: false,
-        // Jaga tile di sekitar viewport agar geser kecil tak memicu render ulang
-        keepBuffer: 3,
+        // Tahan tile di sekeliling viewport. 3 buffer = 1 layar ekstra;
+        // 6 menahan ~2 layar sehingga pan balik tidak memuat ulang.
+        keepBuffer: 6,
         // Tunggu peta diam sebelum memuat (kurangi request beruntun)
         updateWhenIdle: true,
         // Jeda minimal antar permintaan tile saat pan cepat
-        updateInterval: 150,
+        updateInterval: 200,
+        // Tile lama TETAP ditampilkan sampai tile baru siap. Dengan fade,
+        // Leaflet membuang tile lama lebih dulu sehingga area terlihat
+        // kosong/loading walau hanya zoom satu langkah.
+        fadeAnimation: false,
+        // Tile yang baru masuk ditambahkan tanpa animasi opacity.
+        zoomAnimation: true,
     };
 
     const finalOptions = { ...baseOptions, ...customOptions };
@@ -98,29 +110,48 @@ export const createWMSLayer = (name, customOptions = {}) => {
         window.loadingLayersCount = 0;
     }
 
+    // Spinner TIDAK langsung dinyalakan. Zoom satu langkah memicu beberapa
+    // tile yang selesai dalam <250ms; menyalakan spinner untuk itu membuat
+    // peta terasa "selalu loading" padahal data hanya butuh sekejap.
+    // Tunggu sejenak: kalau tile sudah selesai, spinner tidak pernah muncul.
+    const SPINNER_DELAY = 250;
+    let spinnerTimer = null;
+
     const showLoader = () => {
         window.loadingLayersCount++;
-        const loader = document.getElementById('loadingIndicator');
-        const zoomHint = document.getElementById('zoomHint');
-        
-        if (loader) loader.classList.replace('hidden', 'flex');
-        
-        // Show zoom hint if current zoom is lower than this layer's minZoom
-        if (window.map) {
-            const currentZoom = window.map.getZoom();
-            if (currentZoom < baseOptions.minZoom && zoomHint) {
-                zoomHint.classList.remove('hidden');
-            }
-        }
+        if (spinnerTimer) return;
+        spinnerTimer = setTimeout(() => {
+            spinnerTimer = null;
 
-        // Trigger watchdog if available (from dashboard.blade.php)
-        if (window.startLoadingWatchdog) window.startLoadingWatchdog();
+            // sudah selesai sebelum jeda habis -> jangan tampilkan apa pun
+            if (window.loadingLayersCount <= 0) return;
+
+            const loader = document.getElementById('loadingIndicator');
+            const zoomHint = document.getElementById('zoomHint');
+
+            if (loader) loader.classList.replace('hidden', 'flex');
+
+            // Show zoom hint if current zoom is lower than this layer's minZoom
+            if (window.map) {
+                const currentZoom = window.map.getZoom();
+                if (currentZoom < baseOptions.minZoom && zoomHint) {
+                    zoomHint.classList.remove('hidden');
+                }
+            }
+
+            // Trigger watchdog if available (from dashboard.blade.php)
+            if (window.startLoadingWatchdog) window.startLoadingWatchdog();
+        }, SPINNER_DELAY);
     };
 
     const hideLoader = () => {
         window.loadingLayersCount--;
         if (window.loadingLayersCount <= 0) {
             window.loadingLayersCount = 0;
+            if (spinnerTimer) {
+                clearTimeout(spinnerTimer);
+                spinnerTimer = null;
+            }
             const loader = document.getElementById('loadingIndicator');
             const zoomHint = document.getElementById('zoomHint');
             if (loader) loader.classList.replace('flex', 'hidden');

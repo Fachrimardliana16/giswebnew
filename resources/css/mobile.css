@@ -6,9 +6,18 @@
 
 :root {
     --mobile-header-h: 56px;
-    --mobile-nav-h: 60px;
+    /* Tinggi item nav. Isi sebenarnya hanya ikon 22px + label 15px + gap 3px
+       = 40px, jadi 56px sudah lega. Sebelumnya 60px + padding 8px membuat nav
+       terlihat "dipaksa tinggi" dan menyisakan ruang mati di bawah label. */
+    --mobile-nav-h: 56px;
+    /* Safe-area: di iPhone/Android dengan sudut melengkung & gesture bar,
+       nilai env() ini bisa 0 bila viewport belum "cover". Lihat aturan
+       viewport-fit=cover di layout. max() memberi cadangan minimal supaya
+       nav tidak pernah menempel ke tepi layar. */
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
     --sheet-radius: 24px;
 }
 
@@ -56,6 +65,39 @@
         z-index: 50;
     }
 
+    /* Brand "WEBGIS" tampil juga di mobile (sebelumnya disembunyikan
+       Tailwind `hidden lg:block` -> hanya logo yang terlihat). */
+    body > header .header-brand {
+        display: block !important;
+        border-left: 0 !important;
+        padding-left: 0 !important;
+    }
+
+    body > header .header-brand h1 {
+        font-size: 17px !important;
+        letter-spacing: -0.03em !important;
+    }
+
+    body > header .header-brand p {
+        font-size: 7px !important;
+        letter-spacing: 0.22em !important;
+        margin-top: 3px !important;
+    }
+
+    /* Rapikan jarak logo + brand di header mobile */
+    body > header > div:first-child {
+        gap: 10px !important;
+    }
+
+    body > header .group > div:first-child {
+        padding: 4px !important;
+    }
+
+    body > header .group > div:first-child img {
+        width: 24px !important;
+        height: 24px !important;
+    }
+
     /* Garis pemisah halus lewat pseudo-element, bukan border terang */
     body > header::after {
         content: "";
@@ -94,7 +136,7 @@
 
     /* Tombol peta digeser supaya tidak tertutup nav / FAB */
     .leaflet-bottom.leaflet-right {
-        margin-bottom: calc(var(--mobile-nav-h) + 68px + var(--safe-bottom)) !important;
+        margin-bottom: calc(var(--mobile-nav-h) + 60px + var(--safe-bottom)) !important;
         margin-right: 10px !important;
     }
 
@@ -119,14 +161,28 @@
     bottom: 0;
     z-index: 70;
     display: none;
-    grid-template-columns: repeat(5, 1fr);
-    align-items: center;
+
+    /* Jumlah kolom MENGIKUTI jumlah tombol (auto-fit).
+       Sebelumnya dipaku repeat(5, 1fr); saat tombol Camera AR disembunyikan,
+       grid tetap 5 kolom sehingga tersisa satu slot kosong dan tombol
+       bergeser tidak simetris. */
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    align-items: stretch;
+
+    /* Hanya ruang untuk gesture bar. TIDAK ada cadangan tambahan: kalau
+       env() = 0 (Android tanpa gesture bar / browser non-notch), nav tidak
+       boleh menyisakan pita putih kosong di bawah label. */
     padding-bottom: var(--safe-bottom);
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-top: 1px solid rgba(15, 23, 42, 0.08);
-    box-shadow: 0 -4px 24px -8px rgba(15, 23, 42, 0.15);
+    padding-left: max(var(--safe-left), 4px);
+    padding-right: max(var(--safe-right), 4px);
+
+    /* Permukaan bersih: putih hampir pekat + garis tipis, tanpa bayangan tebal */
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-top: 1px solid rgba(15, 23, 42, 0.06);
+    box-shadow: 0 -1px 0 rgba(15, 23, 42, 0.03), 0 -8px 28px -18px rgba(15, 23, 42, 0.28);
 }
 
 @media (max-width: 767px) {
@@ -140,46 +196,63 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: 4px;
     min-height: var(--mobile-nav-h);
-    height: var(--mobile-nav-h);
-    padding: 0;
+    height: auto;
+    padding: 8px 0 7px;
     border: 0;
     background: none;
     box-sizing: border-box;
-    color: #94a3b8;
+    color: #8a94a6;
     font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    /* Sentence case, bukan KAPITAL: lebih tenang dan formal */
+    text-transform: none;
     cursor: pointer;
-    transition: color 0.15s ease;
     position: relative;
+    transition: color 0.18s ease, transform 0.18s ease;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .mobile-nav__item svg {
     width: 22px;
     height: 22px;
+    stroke-width: 1.8;
+    transition: stroke-width 0.18s ease, transform 0.18s ease;
 }
 
+.mobile-nav__item:hover {
+    color: #4b5563;
+}
+
+/* Status aktif: ikon & teks berwarna aksen, indikator berupa pil tipis
+   di bawah label (bukan garis tebal di tepi atas). */
 .mobile-nav__item[aria-selected="true"] {
-    color: #2563eb;
+    color: #1e50c8;
+    font-weight: 700;
 }
 
-.mobile-nav__item[aria-selected="true"]::before {
+.mobile-nav__item[aria-selected="true"] svg {
+    stroke-width: 2.1;
+    transform: translateY(-1px);
+}
+
+.mobile-nav__item[aria-selected="true"]::after {
     content: "";
     position: absolute;
-    top: 0;
+    bottom: calc(2px + var(--safe-bottom) * 0);
     left: 50%;
     transform: translateX(-50%);
-    width: 28px;
-    height: 3px;
-    border-radius: 0 0 4px 4px;
-    background: #2563eb;
+    width: 18px;
+    height: 2.5px;
+    border-radius: 2px;
+    background: #1e50c8;
+    opacity: 0.9;
 }
 
 .mobile-nav__item:active {
-    transform: scale(0.94);
+    transform: scale(0.96);
 }
 
 /* ---------- Tab Peta di tengah: tombol bulat terangkat, mencolok ---------- */
@@ -190,10 +263,12 @@
 }
 
 .mobile-nav__item--peta .mobile-nav__peta-bulat {
-    width: 54px;
-    height: 54px;
-    margin-top: -26px;
-    margin-bottom: 2px;
+    width: 52px;
+    height: 52px;
+    /* terangkat keluar nav; margin-top negatif menentukan seberapa tinggi
+       bulatan menonjol. Dikurangi dari -26px supaya nav lebih ramping. */
+    margin-top: -22px;
+    margin-bottom: 0;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -226,33 +301,38 @@
     transform: scale(0.94);
 }
 
-/* Tab peta tidak memakai indikator garis atas (sudah punya bulatan) */
-.mobile-nav__item--peta[aria-selected="true"]::before {
+/* Tab peta tidak memakai indikator pil (sudah punya bulatan terangkat) */
+.mobile-nav__item--peta[aria-selected="true"]::after {
     display: none;
 }
 
 /* Beri ruang atas untuk bulatan yang terangkat */
 @media (max-width: 767px) {
     .mobile-nav {
+        /* overflow visible: bulatan tengah terangkat keluar batas nav.
+           padding-top 0 -> tidak ada pita kosong di atas ikon. */
         overflow: visible;
-        padding-top: 4px;
+        padding-top: 0;
     }
 }
 
 /* ---------- Badge kecil di tab Layer (jumlah layer aktif) ---------- */
 .mobile-nav__badge {
     position: absolute;
-    top: 4px;
-    right: 50%;
-    transform: translateX(16px);
-    min-width: 16px;
-    height: 16px;
+    top: 5px;
+    left: 50%;
+    transform: translateX(9px);
+    min-width: 15px;
+    height: 15px;
     padding: 0 4px;
     border-radius: 8px;
-    background: #2563eb;
-    color: #fff;
+    /* Aksen lebih lembut dari warna ikon aktif, supaya tidak berebut fokus */
+    background: #e8edf9;
+    color: #1e50c8;
+    border: 1px solid rgba(30, 80, 200, 0.18);
     font-size: 9px;
-    font-weight: 900;
+    font-weight: 700;
+    line-height: 1;
     display: none;
     align-items: center;
     justify-content: center;
@@ -541,16 +621,35 @@ body:has(.mobile-header-search[data-open="1"]) .mobile-fab {
 }
 
 @media (max-width: 767px) {
+    /* Area tangkap drag dibuat BESAR (44px) — sebelumnya hanya 16px,
+       sehingga praktis mustahil ditarik dengan jempol di lapangan. */
     .sidebar-sheet__handle {
         display: flex;
         align-items: center;
         justify-content: center;
         flex: 0 0 auto;
-        padding: 8px 0 2px;
+        height: 44px;
+        padding: 0;
         cursor: grab;
         touch-action: none;
         user-select: none;
         -webkit-user-select: none;
+        /* sedikit melebar ke atas supaya mudah dijangkau */
+        margin-top: -8px;
+    }
+
+    /* Header (judul + tombol close) juga menjadi area tarik: pengguna hampir
+       selalu mencoba menarik dari judul, bukan dari garis kecil di atasnya. */
+    .sidebar-sheet__head {
+        touch-action: none;
+        cursor: grab;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    /* Anak-anak header selain tombol tutup jangan menangkap gesture */
+    .sidebar-sheet__head > *:not(button) {
+        pointer-events: none;
     }
 
     /* Area isi sheet yang bisa digulir.
