@@ -127,7 +127,17 @@ export function initLoadingWatchdog() {
     //  - aset gagal dimuat (biasanya cache service worker basi) -> tawarkan
     //    pemuatan ulang paksa
     //  - error lain -> beri tahu, sertakan ringkasan di konsol
+    //
+    // URL gambar yang sudah dilaporkan, supaya satu tile yang gagal tidak
+    // dicatat berulang kali setiap kali peta digeser.
+    const gagalMuatGambar = new Set();
+
     window.addEventListener('error', (e) => {
+        // Kegagalan memuat <img>/<script>/<link> juga memicu event 'error',
+        // tetapi TIDAK punya .message (nilainya null) dan target-nya elemen,
+        // bukan window. Tanpa cabang di bawah, tiap tile WMS yang gagal
+        // mencetak "Kesalahan aplikasi: undefined" — satu baris per tile,
+        // sehingga konsol dibanjiri pesan tanpa informasi apa pun.
         const target = e.target || {};
         const url = target.src || target.href || '';
 
@@ -148,8 +158,21 @@ export function initLoadingWatchdog() {
             return;
         }
 
-        // error runtime biasa
-        console.error('Kesalahan aplikasi:', e.message || e.error);
+        // error memuat gambar/tile peta: laporkan sekali saja per URL,
+        // jangan ditebalkan ke konsol dan jangan diteruskan ke toast —
+        // satu kali pan sudah bisa memicu puluhan tile gagal.
+        if (target.tagName === 'IMG' || /\.(png|jpe?g|gif|svg|webp)(\?|$)/i.test(url)) {
+            const sudah = gagalMuatGambar.has(url);
+            gagalMuatGambar.add(url);
+            if (!sudah) {
+                console.error('Aset gambar gagal dimuat:', url);
+            }
+            return;
+        }
+
+        // error runtime biasa (target === window, punya .message)
+        const pesan = e.message || (e.error && e.error.message) || '(tanpa pesan)';
+        console.error('Kesalahan aplikasi:', pesan, e.error || '');
     }, true);
 
 }
